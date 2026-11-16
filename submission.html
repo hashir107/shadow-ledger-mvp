@@ -43,7 +43,7 @@
           <table>
             <tbody>
               <tr><th scope="row">Problem</th><td>The same capital events are re-keyed twice, by Fund Admin and by the accountant. Generate the entries once, with a full trail.</td></tr>
-              <tr><th scope="row">v1 scope</th><td>One fund; capital calls, management fees and distributions. Outputs: journals, LP sub-ledger, trial balance, DATEV import file.</td></tr>
+              <tr><th scope="row">v1 scope</th><td>One fund; capital calls, management fees and distributions. Outputs: journals, fund trial balance, DATEV import file.</td></tr>
               <tr><th scope="row">Personas</th><td>Fund Admin (user &amp; approver), External Accountant using DATEV (reviewer).</td></tr>
               <tr><th scope="row">Boundary</th><td>The platform is the sub-ledger; DATEV stays the general ledger of record. The accountant keeps the judgement: closing adjustments, statements, tax.</td></tr>
               <tr><th scope="row">Validate first</th><td>Trace 10–20 events from source document to posting, classify reconciling items by type, measure days to close.</td></tr>
@@ -68,15 +68,13 @@
           <table>
             <thead><tr><th>Item</th><th>Status</th><th>How we resolve it</th><th>When</th></tr></thead>
             <tbody>
-              <tr><td>One closed-ended fund in Germany, with an external accountant on DATEV</td><td><span class="tag st-assumed">Assumed</span></td><td>Confirm at kickoff</td><td>M0</td></tr>
+              <tr><td>One closed-ended fund in Germany, with an external accountant on DATEV</td><td><span class="tag st-assumed">Assumed</span></td><td>Confirm at kickoff</td><td>Discovery</td></tr>
               <tr><td>The platform already holds capital call and distribution data and receives bank transactions</td><td><span class="tag st-known">Known</span></td><td>Given in the brief</td><td>–</td></tr>
-              <tr><td>How much manual work, how many errors, how many close days today</td><td><span class="tag st-unknown">Unknown</span></td><td>Trace 10–20 events; sit in on one quarter-end close</td><td>M0</td></tr>
-              <tr><td>The accountant's DATEV import format and chart of accounts</td><td><span class="tag st-unknown">Unknown</span></td><td>Ask the accountant for them</td><td>M0</td></tr>
-              <tr><td>The accountant is willing to import instead of retype</td><td><span class="tag st-assumed">Assumed</span></td><td>Agreeing to pilot is the M0 gate</td><td>M0</td></tr>
-              <tr><td>When the LP receivable is booked: at call or when cash arrives</td><td><span class="tag st-unknown">Unknown</span></td><td>Finance decision</td><td>Before M1</td></tr>
-              <tr><td>Whether a distribution is a return of capital or a profit</td><td><span class="tag st-unknown">Unknown</span></td><td>Finance with the accountant</td><td>Before M1</td></tr>
-              <tr><td>VAT treatment of the management fee</td><td><span class="tag st-unknown">Unknown</span></td><td>The accountant</td><td>Before M1</td></tr>
-              <tr><td>German audit and retention requirements for append-only records</td><td><span class="tag st-unknown">Unknown</span></td><td>Finance and Legal</td><td>Before M2</td></tr>
+              <tr><td>How much manual work, how many errors, how many close days today</td><td><span class="tag st-unknown">Unknown</span></td><td>Trace 10–20 events; sit in on one quarter-end close</td><td>Discovery</td></tr>
+              <tr><td>The accountant's DATEV import format and chart of accounts</td><td><span class="tag st-unknown">Unknown</span></td><td>Ask the accountant for them</td><td>Discovery</td></tr>
+              <tr><td>The accountant is willing to import instead of retype</td><td><span class="tag st-assumed">Assumed</span></td><td>Agreeing to pilot is the discovery gate</td><td>Discovery</td></tr>
+              <tr><td>Accounting policies: when the LP receivable is booked, how distributions are classified, VAT on the management fee</td><td><span class="tag st-unknown">Unknown</span></td><td>Finance with the accountant</td><td>Before shadow mode</td></tr>
+              <tr><td>German audit and retention requirements for append-only records</td><td><span class="tag st-unknown">Unknown</span></td><td>Finance and Legal</td><td>Before go-live</td></tr>
             </tbody>
           </table>
         </div>
@@ -125,8 +123,8 @@
 
         <p>v1 is designed for Fund Admin. The others benefit indirectly: the audit trail and append-only records serve auditors and regulators from day one. The accountant decides whether it worked: if they still retype, we haven't solved the problem.</p>
         <p><b>v1 scope:</b> one fund and three event types: capital calls (the call and the LP payment), management fees (charged and paid) and distributions. They're the core of fund life, the platform already holds their data, and they're rule-based.</p>
-        <p>Outputs: journals, a per-LP sub-ledger, a fund trial balance, review and approval, a DATEV import file, and reconciliation against the bank.</p>
-        <p><b>Deliberately out of v1:</b> other fund expenses (they need invoice data, VAT rules and accruals; first in line for v1.5), FX, carry and waterfall calculations, NAV and valuations, multiple funds or jurisdictions, financial statements and tax, two-way DATEV sync, and auto-approval.</p>
+        <p>Outputs: journals, a fund trial balance, review and approval, a DATEV import file, and reconciliation against the bank.</p>
+        <p><b>Deliberately out of v1:</b> the per-LP sub-ledger and capital accounts, other fund expenses (they need invoice data, VAT rules and accruals; first in line for v1.5), FX, carry and waterfall calculations, NAV and valuations, multiple funds or jurisdictions, financial statements and tax, two-way DATEV sync, and auto-approval.</p>
 
         <p class="callout">Boundary: the platform is the sub-ledger, DATEV stays the general ledger of record.</p>
 
@@ -136,7 +134,7 @@
             <tbody>
               <tr><td>Ingest and normalise events</td><td>Owns</td><td>–</td></tr>
               <tr><td>Mapping rules (event → accounts)</td><td>Runs them, versioned</td><td>Defines and signs them off</td></tr>
-              <tr><td>Journals, LP sub-ledger, fund trial balance</td><td>Owns</td><td>–</td></tr>
+              <tr><td>Journals and fund trial balance</td><td>Owns</td><td>–</td></tr>
               <tr><td>Review and approval</td><td>Owns the workflow; Fund Admin approves</td><td>–</td></tr>
               <tr><td>Export</td><td>Builds, validates, tracks status</td><td>Imports</td></tr>
               <tr><td>Year-end closing entries, financial statements, tax, period close</td><td>–</td><td>Owns</td></tr>
@@ -165,13 +163,13 @@
           <li><b>Business link:</b> fewer Fund Admin hours per fund (the platform grows funds faster than headcount), a faster close and faster LP reporting, fewer corrections and more trust, and a structured ledger as the base for later reporting (capital accounts, NAV).</li>
         </ul>
 
-        <p><b>Sample workflow:</b> the <a href="demo.html">Shadow Ledger prototype</a> is a clickable mock-up of the workflow, with invented data. Example Fund I has two LPs (60/40), and its Q1 includes a €1m capital call, a €50k management fee and a €200k distribution. The prototype shows:</p>
+        <p><b>Sample workflow:</b> the <a href="demo.html">Shadow Ledger prototype</a> is a clickable mock-up of the workflow, with invented data. Example Fund I's Q1 includes a €1m capital call, a €50k management fee and a €200k distribution. The prototype shows:</p>
         <ul>
           <li>platform and bank events becoming journal entries through versioned rules</li>
           <li>four-eyes approval</li>
           <li>a DATEV-style export batch and reconciliation</li>
-          <li>LP capital accounts and a balanced trial balance (Dr 1,000,000 = Cr 1,000,000)</li>
-          <li>four exception scenarios: a duplicate bank line, a missing LP split, a correction after export (reversal plus replacement) and a manual change in DATEV</li>
+          <li>a balanced trial balance (Dr = Cr)</li>
+          <li>three exception scenarios: a duplicate bank line, a correction after export (reversal plus a correcting entry) and a manual change in DATEV</li>
         </ul>
       </section>
 
@@ -194,7 +192,7 @@
             <thead><tr><th>Case</th><th>Handling</th></tr></thead>
             <tbody>
               <tr><td>Duplicate event</td><td>A unique key (source ID + bank reference) flags the second copy instead of posting it</td></tr>
-              <tr><td>Missing data (e.g. no LP split)</td><td>Held in <em>Needs review</em> with a reason; never guessed</td></tr>
+              <tr><td>Missing data (e.g. a bank payment that can't be matched to a call)</td><td>Held in <em>Needs review</em> with a reason; never guessed</td></tr>
               <tr><td>Wrong mapping</td><td>Fix the rule as a new version; identify affected entries; reverse and re-post through approval</td></tr>
               <tr><td>Back-dated event</td><td>Open period: post with the original value date. Closed or exported period: post as a prior-period adjustment in the current period, referencing the original document</td></tr>
               <tr><td>Failed export</td><td>Validated before export (debits equal credits, accounts exist in the chart of accounts, posting period open); all or nothing; safe retry</td></tr>
@@ -213,7 +211,7 @@
               <tr><td>M0 Discovery: baseline hours, errors and close days; agree the mapping</td><td>The problem is material, and the accountant agrees to pilot</td></tr>
               <tr><td>M1 Shadow mode: generate entries alongside today's process</td><td>Entries match what the accountant booked; the accountant agrees to import</td></tr>
               <tr><td>M2 v1 live for the flagship fund</td><td>One clean quarter-end close, with measurable hours saved</td></tr>
-              <tr><td>Later</td><td>More German funds → fund expenses → reporting from the ledger → other jurisdictions (e.g. UK, Luxembourg)</td></tr>
+              <tr><td>Later</td><td>Per-LP sub-ledger and capital accounts → more German funds → fund expenses → reporting from the ledger → other jurisdictions (e.g. UK, Luxembourg)</td></tr>
             </tbody>
           </table>
         </div>
