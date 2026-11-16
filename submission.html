@@ -22,28 +22,29 @@
     <div class="meta"><span>Nov 15, 2026</span><span>Author: Hashir</span></div>
   </header>
 
-  <div class="doc-grid">
-    <nav class="toc" aria-label="Contents">
-      <b>Contents</b>
-      <ol>
-        <li><a href="#problem">1. Problem Setup</a></li>
-        <li><a href="#framing">2. Framing</a></li>
-        <li><a href="#strategy">3. Strategic Approach</a></li>
-        <li><a href="#measurement">4. Measurement</a></li>
-        <li><a href="#risks">5. Risks &amp; Tradeoffs</a></li>
-      </ol>
-    </nav>
+  <p class="banner">Written answers · about a 7-minute read · <a href="demo.html">Open the prototype</a></p>
+
+  <nav class="stepbar" aria-label="Sections">
+    <ol class="steps">
+      <li><a class="step" href="#problem"><span class="n">1</span>Problem Setup</a></li>
+      <li><a class="step" href="#framing"><span class="n">2</span>Framing</a></li>
+      <li><a class="step" href="#strategy"><span class="n">3</span>Strategic Approach</a></li>
+      <li><a class="step" href="#measurement"><span class="n">4</span>Measurement</a></li>
+      <li><a class="step" href="#risks"><span class="n">5</span>Risks &amp; Tradeoffs</a></li>
+    </ol>
+  </nav>
+
 
     <article>
       <!-- SECTION: Intro -->
       <section id="intro">
         <p class="lead">Today the same capital events are turned into accounting entries several times, by different people in different tools. In v1, the platform generates those entries once, with a full trail. A controller approves them, and the accountant imports them into DATEV instead of retyping. For the fund administrator, this lowers the cost of serving each fund. For customers, it means a faster, more reliable closing and reporting.</p>
-        <p><em>Assumptions:</em> one closed-ended fund in Germany, with an external accountant keeping the books in DATEV. the platform already holds capital call and distribution data and receives bank transactions.</p>
+        <p><em>Assumptions:</em> one closed-ended fund in Germany, with an external accountant keeping the books in DATEV. The platform already holds capital call and distribution data and receives bank transactions.</p>
       </section>
 
       <!-- SECTION: 1. Problem Setup -->
       <section id="problem">
-        <h2>1. Problem Setup</h2>
+        <h2><span class="n">1</span>Problem Setup</h2>
         <p>There is no single trusted version of how an event became a booking, so ops re-key data, the accountant reinterprets it, and the controller reconciles two sources.</p>
 
         <figure class="flowfig" aria-label="Current vs future workflow">
@@ -110,7 +111,7 @@
 
       <!-- SECTION: 2. Framing -->
       <section id="framing">
-        <h2>2. Framing</h2>
+        <h2><span class="n">2</span>Framing</h2>
         <ul>
           <li><b>What I'd ask to see (last 2–4 quarters of the flagship fund):</b>
             <ul>
@@ -139,10 +140,10 @@
 
       <!-- SECTION: 3. Strategic Approach -->
       <section id="strategy">
-        <h2>3. Strategic Approach</h2>
+        <h2><span class="n">3</span>Strategic Approach</h2>
         <p>Earn the accountant's trust on a few events, prove the time saved, then scale. The fund administrator delivers fund admin as a service, so every manual accounting hour is partly its own cost. The Shadow Ledger is first a margin lever, then a faster, clearer close for customers, and later the base for reporting.</p>
 
-        <h3>Principles:</h3>
+        <h3>Principles</h3>
         <ul>
           <li><b>Correct books first.</b> One wrong export costs more trust than ten manual entries save, hence shadow mode and review/approval.</li>
           <li><b>Every entry traces back.</b> Each one links to its source event, rule version and export batch. No entry exists without a source.</li>
@@ -183,7 +184,7 @@
 
       <!-- SECTION: 4. Measurement -->
       <section id="measurement">
-        <h2>4. Measurement</h2>
+        <h2><span class="n">4</span>Measurement</h2>
         <div class="tablewrap">
           <table>
             <thead><tr><th>Type</th><th>Metric</th><th>Why it matters</th></tr></thead>
@@ -200,7 +201,7 @@
 
       <!-- SECTION: 5. Risks & Tradeoffs -->
       <section id="risks">
-        <h2>5. Risks &amp; Tradeoffs</h2>
+        <h2><span class="n">5</span>Risks &amp; Tradeoffs</h2>
         <div class="tablewrap">
           <table>
             <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
@@ -222,7 +223,19 @@
         <a class="btn ghost" href="index.html">← Overview</a>
       </div>
     </article>
-  </div>
 </div>
+<script>
+// Highlight the section you're reading in the step bar
+(function(){
+  var links=[].slice.call(document.querySelectorAll(".step"));
+  var secs=links.map(function(a){return document.querySelector(a.getAttribute("href"));});
+  function update(){
+    var cur=-1;
+    secs.forEach(function(s,i){ if(s && s.getBoundingClientRect().top<140) cur=i; });
+    links.forEach(function(a,i){ if(i===cur) a.setAttribute("aria-current","step"); else a.removeAttribute("aria-current"); });
+  }
+  addEventListener("scroll",update,{passive:true}); update();
+})();
+</script>
 </body>
 </html>
