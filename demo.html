@@ -312,7 +312,7 @@ function makeEntry(e,opts={}){
 
 function ingest(e,quiet){
   const dup = S.events.find(x=>x.key===e.key && x.status!=="Blocked");
-  if(dup){ e.status="Blocked"; e.note="Duplicate of "+dup.id+" (same bank date, amount and payer). Not posted."; S.events.push(e);
+  if(dup){ e.status="Blocked"; e.note="Duplicate of "+dup.id+" (same bank reference, date and amount). Not posted."; S.events.push(e);
     if(!quiet) log(PEOPLE.system,"Blocked "+e.id+": duplicate of "+dup.id+". No entry created."); return; }
   e.status="Processed"; S.events.push(e);
   const j = makeEntry(e); e.je=j.id;
