@@ -36,10 +36,50 @@
 
 
     <article>
+      <!-- SECTION: At a glance (the 1–2 page answer; details follow below) -->
+      <section id="glance" class="glance">
+        <h2>At a glance</h2>
+        <div class="tablewrap">
+          <table>
+            <tbody>
+              <tr><th scope="row">Problem</th><td>The same capital events are re-keyed twice, by ops and by the accountant. Generate the entries once, with a full trail.</td></tr>
+              <tr><th scope="row">v1 scope</th><td>One fund; capital calls, management fees and distributions. Outputs: journals, LP sub-ledger, trial balance, DATEV import file.</td></tr>
+              <tr><th scope="row">Personas</th><td>Ops (primary user), fund controller (approver), external accountant (decides whether it worked).</td></tr>
+              <tr><th scope="row">Boundary</th><td>The platform is the sub-ledger; DATEV stays the general ledger of record. The accountant keeps the judgement: closing adjustments, statements, tax.</td></tr>
+              <tr><th scope="row">Validate first</th><td>Trace 10–20 events from source to booking, sort mismatches by type, measure close days.</td></tr>
+              <tr><th scope="row">Principles</th><td>Correct books first, every entry traces back, append-only, review exceptions rather than everything.</td></tr>
+              <tr><th scope="row">Corrections</th><td>Reversal plus a linked replacement, never an edit. Back-dated items post in the open period, referencing the original.</td></tr>
+              <tr><th scope="row">Milestones</th><td>M0 discovery (~4 weeks) → M1 shadow mode (one quarter) → M2 live for the flagship fund.</td></tr>
+              <tr><th scope="row">Success</th><td>Leading: entries booked with no manual change, adoption. Lagging: days to close, ops hours per fund.</td></tr>
+              <tr><th scope="row">Biggest risk</th><td>Wrong entries that look right. Mitigated by accountant sign-off on the mapping, shadow mode and four-eyes approval.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note-sm">Details below ↓</p>
+      </section>
+
       <!-- SECTION: Intro -->
       <section id="intro">
         <p class="lead">Today the same capital events are turned into accounting entries several times, by different people in different tools. In v1, the platform generates those entries once, with a full trail. A controller approves them, and the accountant imports them into DATEV instead of retyping. For the fund administrator, this lowers the cost of serving each fund. For customers, it means a faster, more reliable closing and reporting.</p>
         <p><em>Assumptions:</em> one closed-ended fund in Germany, with an external accountant keeping the books in DATEV. The platform already holds capital call and distribution data and receives bank transactions.</p>
+
+        <h3>What we know, assume and don't know yet</h3>
+        <div class="tablewrap kau">
+          <table>
+            <thead><tr><th>Item</th><th>Status</th><th>How we resolve it</th><th>When</th></tr></thead>
+            <tbody>
+              <tr><td>One closed-ended fund in Germany, with an external accountant on DATEV</td><td><span class="tag st-assumed">Assumed</span></td><td>Confirm at kickoff</td><td>M0</td></tr>
+              <tr><td>The platform already holds capital call and distribution data and receives bank transactions</td><td><span class="tag st-known">Known</span></td><td>Given in the brief</td><td>–</td></tr>
+              <tr><td>How much manual work, how many errors, how many close days today</td><td><span class="tag st-unknown">Unknown</span></td><td>Trace 10–20 events; sit in on one quarter-end close</td><td>M0</td></tr>
+              <tr><td>The accountant's DATEV import format and chart of accounts</td><td><span class="tag st-unknown">Unknown</span></td><td>Ask the accountant for them</td><td>M0</td></tr>
+              <tr><td>The accountant is willing to import instead of retype</td><td><span class="tag st-assumed">Assumed</span></td><td>Agreeing to pilot is the M0 gate</td><td>M0</td></tr>
+              <tr><td>When the LP receivable is booked: at call or when cash arrives</td><td><span class="tag st-unknown">Unknown</span></td><td>Finance decision</td><td>Before M1</td></tr>
+              <tr><td>Whether a distribution is a return of capital or a profit</td><td><span class="tag st-unknown">Unknown</span></td><td>Finance with the accountant</td><td>Before M1</td></tr>
+              <tr><td>VAT treatment of the management fee</td><td><span class="tag st-unknown">Unknown</span></td><td>The accountant</td><td>Before M1</td></tr>
+              <tr><td>German audit and retention requirements for append-only records</td><td><span class="tag st-unknown">Unknown</span></td><td>Finance and Legal</td><td>Before M2</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <!-- SECTION: 1. Problem Setup -->
