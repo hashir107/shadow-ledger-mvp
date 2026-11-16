@@ -187,6 +187,24 @@
           <li><b>Review exceptions, not everything.</b> Clean entries are batch-approved, and automation is earned: auto-approval only after a full quarter with no corrections.</li>
         </ul>
 
+        <h3>Event types and their mapping to accounts</h3>
+        <p>Each event type has one mapping rule: what triggers it, which account it debits and which it credits, where the amount comes from, and why. Rules are configuration, not code, so a new event type is a new rule. v1 has five:</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Event type</th><th>Debit</th><th>Credit</th></tr></thead>
+            <tbody>
+              <tr><td>Capital call issued</td><td>LP receivables</td><td>LP capital contributions</td></tr>
+              <tr><td>LP contribution received</td><td>Bank</td><td>LP receivables</td></tr>
+              <tr><td>Management fee charged</td><td>Management fee expense</td><td>Payable to manager</td></tr>
+              <tr><td>Management fee paid</td><td>Payable to manager</td><td>Bank</td></tr>
+              <tr><td>Distribution paid</td><td>LP distributions</td><td>Bank</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Account numbers come from the accountant's DATEV chart of accounts.</p>
+
+        <h3>Corrections, back-dated events and reversals</h3>
+        <p>Approved or exported entries are never edited: every fix is a reversing entry plus a linked correcting entry, so the trail stays complete. Each case:</p>
         <div class="tablewrap">
           <table>
             <thead><tr><th>Case</th><th>Handling</th></tr></thead>
@@ -201,9 +219,13 @@
           </table>
         </div>
 
-        <p><b>Review and approval:</b> Draft → Needs review (only if flagged) → Approved → Exported → Reconciled. One Fund Admin prepares entries and another approves; nobody approves their own entries. A rejected entry goes back to Draft with a reason, and a failed export goes back to Approved once it's fixed. Every change records who, when and why.</p>
-        <p><b>Quick win on the real foundation:</b> an early DATEV import for capital calls saves visible time for Fund Admin and the accountant. It's built on the real event and rule model, just narrowly, so we never ship a throwaway script.</p>
+        <h3>Review and approval before export</h3>
+        <p>Draft → Needs review (only if flagged) → Approved → Exported → Reconciled. One Fund Admin prepares entries and another approves; nobody approves their own entries. Clean entries are approved as a batch, so attention goes to the flagged ones. A rejected entry goes back to Draft with a reason, and a failed export goes back to Approved once it's fixed. Every change records who, when and why.</p>
 
+        <h3>Quick wins vs foundational work</h3>
+        <p>An early DATEV import for capital calls saves visible time for Fund Admin and the accountant. It's built on the real event and rule model, just narrowly, so we never ship a throwaway script.</p>
+
+        <h3>Milestones</h3>
         <div class="tablewrap">
           <table>
             <thead><tr><th>Milestone</th><th>Gate to move on</th></tr></thead>
