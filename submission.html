@@ -113,14 +113,13 @@
           <table>
             <thead><tr><th>Persona</th><th>Pain today</th><th>Good outcome</th></tr></thead>
             <tbody>
-              <tr><td>fund admin (primary user)</td><td>Re-keys events into spreadsheets for the accountant; chases mismatches</td><td>Entries are generated automatically; ops handle only exceptions</td></tr>
+              <tr><td>Fund administrator: ops team (primary user) and management</td><td>Ops re-key events into spreadsheets for the accountant and chase mismatches; ops cost grows with each fund, with little view of close status across funds</td><td>Entries are generated automatically and ops handle only exceptions; lower cost to serve, with one view of close progress and errors</td></tr>
               <tr><td>Fund controller / CFO (approver)</td><td>Can't see the books until the accountant has posted; reconciles two sources</td><td>Reviews and approves in one place; trusts the numbers</td></tr>
               <tr><td>External accountant (receives the output)</td><td>Gets spreadsheets or PDFs, interprets them and posts by hand</td><td>A balanced import file in their own chart of accounts, traceable to source</td></tr>
               <tr><td>GP / fund manager (buyer)</td><td>Slow LP reporting; accounting fees; operational risk</td><td>A faster, cheaper, lower-risk close; credible numbers for LPs</td></tr>
               <tr><td>LPs (indirect)</td><td>Late or corrected capital account statements</td><td>Correct statements on time; confidence in the manager</td></tr>
               <tr><td>Auditors (not a v1 user)</td><td>Trace balances back through spreadsheets and emails</td><td>Every entry traceable to source, rule and approver; no silent edits</td></tr>
               <tr><td>Regulators, e.g. BaFin (not a v1 user)</td><td>Expect proper bookkeeping, retention and accurate reporting (rules to confirm with Legal)</td><td>Complete, unaltered, retained records that tie to reports</td></tr>
-              <tr><td>Fund administrator management (internal)</td><td>Ops cost grows with each fund; little view of close status across funds</td><td>Lower cost to serve; one view of close progress and errors</td></tr>
             </tbody>
           </table>
         </div>
@@ -167,7 +166,7 @@
           <li><b>Business link:</b> fewer ops hours per fund (the platform grows funds faster than headcount), a faster close and faster LP reporting, fewer corrections and more trust, and a structured ledger as the base for later reporting (capital accounts, NAV).</li>
         </ul>
 
-        <p><b>Prototype (second deliverable):</b> <a href="demo.html">Shadow Ledger prototype</a>, a clickable mock-up with invented data. Example Fund I has two LPs (60/40), and its Q1 includes a €1m capital call, a €50k management fee and a €200k distribution. The prototype shows:</p>
+        <p><b>Sample workflow:</b> the <a href="demo.html">Shadow Ledger prototype</a> is a clickable mock-up of the workflow, with invented data. Example Fund I has two LPs (60/40), and its Q1 includes a €1m capital call, a €50k management fee and a €200k distribution. The prototype shows:</p>
         <ul>
           <li>platform and bank events becoming journal entries through versioned rules</li>
           <li>four-eyes approval</li>
@@ -175,7 +174,6 @@
           <li>LP capital accounts and a balanced trial balance (Dr 1,000,000 = Cr 1,000,000)</li>
           <li>four exception scenarios: a duplicate bank line, a missing LP split, a correction after export (reversal plus replacement) and a manual change in DATEV</li>
         </ul>
-        <p>Mappings are illustrative. Finance decides receivable timing, how distributions are classified, and VAT on fees.</p>
       </section>
 
       <!-- SECTION: 3. Strategic Approach -->
