@@ -144,6 +144,24 @@ details.je > summary .amt{text-align:right;font-family:var(--font-mono);font-var
 pre.csv{background:var(--info-soft);border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto;font:12px/1.5 var(--font-mono);margin:8px 0}
 .next{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
+/* Rules view: one transparent card per rule */
+.lifecycle{display:grid;gap:6px;margin:0 0 14px}
+.lifecycle div{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px}
+.lifecycle .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 10px}
+.lifecycle .res{color:var(--good);font-size:12.5px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.rule{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px;align-content:start;scroll-margin-top:16px}
+.rule:target,.rule.hl{border-color:var(--accent)}
+.rule h4{margin:0;font-size:14px;font-weight:600}
+.rule h4 span{font-family:var(--font-mono);color:var(--accent);margin-right:6px}
+.rule dl{display:grid;grid-template-columns:70px minmax(0,1fr);gap:4px 10px;margin:0;font-size:13px}
+.rule dt{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding-top:1px}
+.rule dd{margin:0}
+.rule table{font-size:12.5px}
+.rule .used{display:flex;gap:4px;flex-wrap:wrap}
+.exl{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;margin:4px 0 2px;padding:6px 8px;background:var(--info-soft);border-radius:8px;font-size:12.5px}
+.exl .num{text-align:right;font-variant-numeric:tabular-nums}
+.rulefor{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;background:var(--info-soft);border-radius:8px;padding:6px 10px;margin:8px 0 2px;font-size:12.5px}
 /* History drawer */
 .scrim{position:fixed;inset:0;background:var(--scrim);z-index:20}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(380px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:21;display:flex;flex-direction:column;padding:16px;padding-top:max(16px,env(safe-area-inset-top,0px))}
@@ -200,21 +218,39 @@ pre.csv{background:var(--info-soft);border:1px solid var(--line);border-radius:1
 (function(){
 "use strict";
 const ACCOUNTS = {
-  "1200":{name:"Bank – fund account",type:"Asset"},
-  "1400":{name:"LP receivables",type:"Asset"},
-  "2000":{name:"LP capital contributions",type:"Equity"},
-  "2100":{name:"LP distributions",type:"Equity"},
-  "3300":{name:"Payable to manager",type:"Liability"},
-  "6320":{name:"Management fee expense",type:"Expense"},
-  "6300":{name:"Other operating expenses",type:"Expense"}
+  "1000":{name:"Bank – fund account",type:"Asset",holds:"Cash in the fund's bank account",side:"Debit"},
+  "1100":{name:"LP receivables",type:"Asset",holds:"Capital called but not yet paid by LPs",side:"Debit"},
+  "2000":{name:"Payable to manager",type:"Liability",holds:"Fees charged but not yet paid to the manager",side:"Credit"},
+  "3000":{name:"LP capital contributions",type:"Equity",holds:"Capital the LPs have been called for",side:"Credit"},
+  "3100":{name:"LP distributions",type:"Equity",holds:"Money returned to LPs",side:"Debit"},
+  "4000":{name:"Management fee expense",type:"Expense",holds:"The fund's cost of the management fee",side:"Debit"},
+  "4100":{name:"Other operating expenses",type:"Expense",holds:"Other running costs (used here only in the DATEV-edit scenario)",side:"Debit"}
 };
+// Each rule explains itself: trigger, what it posts, where the amount comes from, why, and the effect on the books.
 const RULES = [
-  {id:"R1",type:"capital_call_issued",label:"Capital call issued",dr:"1400 LP receivables",cr:"2000 LP capital contributions",v:1},
-  {id:"R2",type:"contribution_received",label:"LP contribution received (cash receipt)",dr:"1200 Bank",cr:"1400 LP receivables",v:1},
-  {id:"R3",type:"fee_charged",label:"Management fee charged",dr:"6320 Management fee expense",cr:"3300 Payable to manager",v:1},
-  {id:"R4",type:"fee_paid",label:"Management fee paid (cash payment)",dr:"3300 Payable to manager",cr:"1200 Bank",v:1},
-  {id:"R5",type:"distribution_paid",label:"Distribution paid (cash payment)",dr:"2100 LP distributions",cr:"1200 Bank",v:1}
+  {id:"R1",type:"capital_call_issued",label:"Capital call issued",dr:"1100",cr:"3000",
+   when:"The fund platform issues a capital call notice.",amount:"The total amount called.",
+   why:"LPs now owe the fund the called amount, and that part of their commitment becomes capital in the fund.",
+   effect:"LP receivables ↑ · LP capital ↑",ex:{amt:1000000,ref:"Capital call #1"},
+   policy:"Booked when the call is issued. The alternative, booking only when cash arrives, is an open policy choice."},
+  {id:"R2",type:"contribution_received",label:"LP contribution received",dr:"1000",cr:"1100",
+   when:"The bank feed shows a cash receipt matched to an open call.",amount:"The amount received.",
+   why:"The cash arrives and the LP's receivable is cleared.",
+   effect:"Bank ↑ · LP receivables ↓",ex:{amt:600000,ref:"LP A pays its share of call #1"}},
+  {id:"R3",type:"fee_charged",label:"Management fee charged",dr:"4000",cr:"2000",
+   when:"The fund platform books the quarterly management fee.",amount:"The fee for the quarter.",
+   why:"The fund records the fee as a cost and owes it to the manager.",
+   effect:"Fee expense ↑ · Payable to manager ↑",ex:{amt:50000,ref:"Q1 fee"}},
+  {id:"R4",type:"fee_paid",label:"Management fee paid",dr:"2000",cr:"1000",
+   when:"The bank feed shows a cash payment to the manager.",amount:"The amount paid.",
+   why:"Paying the manager clears what the fund owed.",
+   effect:"Payable to manager ↓ · Bank ↓",ex:{amt:50000,ref:"Q1 fee paid"}},
+  {id:"R5",type:"distribution_paid",label:"Distribution paid",dr:"3100",cr:"1000",
+   when:"The bank feed shows a cash payment to LPs for a distribution.",amount:"The total amount distributed.",
+   why:"Money leaves the fund and goes back to the LPs.",
+   effect:"LP distributions ↑ · Bank ↓",ex:{amt:200000,ref:"Distribution #1"}}
 ];
+const RULE_BY_ID = Object.fromEntries(RULES.map(r=>[r.id,r]));
 const TYPE_LABEL = Object.fromEntries(RULES.map(r=>[r.type,r.label]));
 const RULE_OF = Object.fromEntries(RULES.map(r=>[r.type,r]));
 const PEOPLE = {ops:"Mara (Fund Admin)",controller:"Jonas (Fund Admin)",system:"Rules engine",accountant:"External Accountant (DATEV, reviewer)"};
@@ -225,7 +261,7 @@ const REASONS = ["Wrong amount","Wrong account","Missing support"];
 let S;
 function seed(){
   S = {role:"controller",tab:"approve",events:[],entries:[],batches:[],log:[],q1Exported:false,
-       datev:null, datevChange:false, scen:{dup:false,fix:false,datev:false}, preview:true, ledgerAcc:"1200",
+       datev:null, datevChange:false, scen:{dup:false,fix:false,datev:false}, preview:true, ledgerAcc:"1000",
        open:new Set(), rejecting:null, drawer:false, seq:{je:0,ev:110,b:0}};
   const ev = [
     {id:"E-101",date:"2026-01-15",source:"fund platform",type:"capital_call_issued",desc:"Capital call #1 (10% of commitments)",amount:1000000,ref:"CALL-1",key:"CALL-1"},
@@ -239,7 +275,7 @@ function seed(){
   // Pre-approve the capital call so the demo opens mid-quarter
   S.entries.forEach(j=>{ if(j.event==="E-101"){ j.status="Approved"; j.approvedBy=PEOPLE.controller; }});
   S.log=[];
-  log(PEOPLE.system,"Loaded 6 Q1 events (3 from the fund platform, 3 from the bank feed) and generated entries with rules R1–R5 v1.");
+  log(PEOPLE.system,"Loaded 6 Q1 events (3 from the fund platform, 3 from the bank feed) and generated entries with rules R1–R5.");
   log(PEOPLE.controller,"Approved JE-001 (capital call #1).");
 }
 
@@ -255,14 +291,9 @@ function actor(){ return S.role==="ops"?PEOPLE.ops:PEOPLE.controller; }
 
 function linesFor(e,amountOverride){
   const a = amountOverride ?? e.amount;
-  switch(e.type){
-    case "capital_call_issued": return [{acc:"1400",dr:a,cr:0},{acc:"2000",dr:0,cr:a}];
-    case "contribution_received": return [{acc:"1200",dr:a,cr:0},{acc:"1400",dr:0,cr:a}];
-    case "fee_charged": return [{acc:"6320",dr:a,cr:0},{acc:"3300",dr:0,cr:a}];
-    case "fee_paid": return [{acc:"3300",dr:a,cr:0},{acc:"1200",dr:0,cr:a}];
-    case "distribution_paid": return [{acc:"2100",dr:a,cr:0},{acc:"1200",dr:0,cr:a}];
-  }
-  return [];
+  // Every rule posts one debit and one credit for the same amount
+  const rule = RULE_OF[e.type];
+  return rule ? [{acc:rule.dr,dr:a,cr:0},{acc:rule.cr,dr:0,cr:a}] : [];
 }
 
 function makeEntry(e,opts={}){
@@ -270,7 +301,7 @@ function makeEntry(e,opts={}){
   const dr = lines.reduce((s,l)=>s+l.dr,0), cr = lines.reduce((s,l)=>s+l.cr,0);
   const pd = postingDate(e.date);
   const j = {id:nextJE(),event:e.id,date:pd,origDate:e.date,text:opts.text||TYPE_LABEL[e.type]+" – "+e.ref,
-    rule:opts.rule||(RULE_OF[e.type].id+" v"+RULE_OF[e.type].v),lines,preparedBy:PEOPLE.ops,status:"Draft",notes:[],batch:null};
+    rule:opts.rule||RULE_OF[e.type].id,lines,preparedBy:PEOPLE.ops,status:"Draft",notes:[],batch:null};
   if(dr!==cr){ j.status="Needs review"; j.notes.push({k:"bad",t:"Debits and credits don't balance."}); }
   if(e.flag){ j.status="Needs review"; j.notes.push({k:"warn",t:e.flag}); }
   if(pd!==e.date){ j.notes.push({k:"warn",t:"Prior-period item: value date "+e.date+", but Q1 is already exported. Posted as an adjustment in the open period (Q2), referencing the original date."}); }
@@ -284,7 +315,7 @@ function ingest(e,quiet){
   if(dup){ e.status="Blocked"; e.note="Duplicate of "+dup.id+" (same bank date, amount and payer). Not posted."; S.events.push(e);
     if(!quiet) log(PEOPLE.system,"Blocked "+e.id+": duplicate of "+dup.id+". No entry created."); return; }
   e.status="Processed"; S.events.push(e);
-  const j = makeEntry(e);
+  const j = makeEntry(e); e.je=j.id;
   if(!quiet) log(PEOPLE.system,"Created "+j.id+" from "+e.id+" using "+j.rule+" ("+j.status+").");
 }
 
@@ -354,6 +385,7 @@ function evTable(list){
   return '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Event</th><th>Source</th><th class="num">EUR</th><th>Status</th></tr></thead><tbody>'+
   list.map(e=>'<tr><td class="mono">'+e.date+'</td><td><b>'+esc(e.desc)+'</b><div class="note">'+e.id+' · '+esc(e.ref)+
     (e.lp?' · payer LP '+e.lp:'')+'</div>'+
+    (e.je?'<div class="note">→ rule <button type="button" class="link" data-act="seerule" data-id="'+RULE_OF[e.type].id+'">'+RULE_OF[e.type].id+' · '+esc(RULE_OF[e.type].label)+'</button> → <button type="button" class="link" data-act="openje" data-id="'+e.je+'">'+e.je+'</button></div>':(e.status==="Blocked"?'<div class="note">No rule applied.</div>':''))+
     (e.note?'<div class="note '+(e.status==="Blocked"?"bad":"warn")+'">'+esc(e.note)+'</div>':'')+eventActions(e)+
     '</td><td>'+esc(e.source)+'</td><td class="num">'+fmt(e.amount)+'</td><td>'+pill(e.dismissed?"Dismissed":e.status)+'</td></tr>').join("")+
   '</tbody></table></div>';
@@ -389,10 +421,15 @@ function entryRow(j){
     '<span class="amt">€'+fmt(total(j))+'</span>'+
     '<span class="st">'+pill(status)+'</span>'+
     '<span class="acts">'+entryActions(j)+'</span></summary>'+
-    '<div class="je-body">'+j.notes.map(n=>'<div class="note '+n.k+'">'+esc(n.t)+'</div>').join("")+
+    '<div class="je-body">'+ruleLine(j)+j.notes.map(n=>'<div class="note '+n.k+'">'+esc(n.t)+'</div>').join("")+
     '<div class="tablewrap"><table><thead><tr><th>Account</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead><tbody>'+
     j.lines.map(l=>'<tr><td class="mono">'+l.acc+' '+esc(ACCOUNTS[l.acc].name)+'</td><td class="num">'+fmt(l.dr)+'</td><td class="num">'+fmt(l.cr)+'</td></tr>').join("")+
-    '</tbody></table></div><p class="note">Source '+j.event+' · rule '+esc(j.rule)+' · prepared by '+esc(j.preparedBy)+(j.approvedBy?' · approved by '+esc(j.approvedBy):'')+(j.batch?' · batch '+j.batch:'')+'</p></div></details>';
+    '</tbody></table></div><p class="note">Source '+j.event+' · '+(j.reversal?'reversing entry':'rule '+esc(j.rule))+' · prepared by '+esc(j.preparedBy)+(j.approvedBy?' · approved by '+esc(j.approvedBy):'')+(j.batch?' · batch '+j.batch:'')+'</p></div></details>';
+}
+function ruleLine(j){
+  if(j.reversal) return '<div class="rulefor"><b>Reversing entry</b><span>Mirrors '+j.reversal+': every debit becomes a credit and vice versa, so the original nets to zero.</span><button type="button" class="link" data-act="seerule" data-id="corrections">See rule</button></div>';
+  const r=RULE_BY_ID[j.rule]; if(!r) return "";
+  return '<div class="rulefor"><b>Rule '+r.id+' · '+esc(r.label)+'</b><span>'+esc(r.why)+(j.replacement?' Re-run with the corrected amount.':'')+'</span><button type="button" class="link" data-act="seerule" data-id="'+r.id+'">See rule</button></div>';
 }
 function entryActions(j){
   const ctl=S.role==="controller";
@@ -473,7 +510,7 @@ function vTB(v){
   '<p>'+(td===tc?'<span class="ok">Balanced.</span>':'<span class="ko">Not balanced.</span>')+' '+openItems(rows)+'</p>';
 }
 function openItems(rows){
-  const r=rows.find(x=>x.acc==="1400"), p=rows.find(x=>x.acc==="3300");
+  const r=rows.find(x=>x.acc==="1100"), p=rows.find(x=>x.acc==="2000");
   const bits=[];
   bits.push(r?"LP receivables of €"+fmt(r.dr||r.cr)+" are still open: capital called but not yet paid.":"LP receivables are zero: every call has been paid.");
   if(p&&p.dr) bits.push("Payable to manager shows a €"+fmt(p.dr)+" debit balance: a receivable from the manager after the fee correction, cleared by a credit note or refund.");
@@ -481,13 +518,45 @@ function openItems(rows){
   else bits.push("Payable to manager is zero: the fee is settled.");
   return bits.join(" ");
 }
+function acctName(a){ return a+' '+ACCOUNTS[a].name; }
+function postsTable(rows){
+  // compact example lines: Dr/Cr, account number, amount
+  return '<div class="exl">'+rows.map(([a,d,c])=>'<span class="mono">'+(d?'Dr':'Cr')+' '+a+'</span><span>'+esc(ACCOUNTS[a].name)+'</span><span class="mono num">'+(d||c)+'</span>').join("")+'</div>';
+}
+function usedBy(pred){
+  const ids=S.entries.filter(pred).map(j=>j.id);
+  return ids.length?'<span class="used">'+ids.map(id=>'<button type="button" class="small" data-act="openje" data-id="'+id+'">'+id+'</button>').join("")+'</span>':'<span class="note">No entries yet.</span>';
+}
 function vRules(v){
-  v.innerHTML='<h2>Mapping rules</h2><p class="hint">Each event type maps to debit and credit accounts. Rules are versioned configuration owned by Finance and signed off by the accountant, so every entry can say which rule produced it. Account numbers are invented.</p>'+
-  '<div class="tablewrap"><table><thead><tr><th>Rule</th><th>Event type</th><th>Debit</th><th>Credit</th><th>Version</th></tr></thead><tbody>'+
-  RULES.map(r=>'<tr><td class="mono">'+r.id+'</td><td>'+esc(r.label)+'</td><td>'+esc(r.dr)+'</td><td>'+esc(r.cr)+'</td><td class="mono">v'+r.v+'</td></tr>').join("")+
-  '</tbody></table></div><h3>Chart of accounts (illustrative)</h3><div class="tablewrap"><table><thead><tr><th>Account</th><th>Name</th><th>Type</th></tr></thead><tbody>'+
-  Object.entries(ACCOUNTS).map(([k,a])=>'<tr><td class="mono">'+k+'</td><td>'+esc(a.name)+'</td><td>'+a.type+'</td></tr>').join("")+'</tbody></table></div>'+
-  '<p class="hint" style="margin-top:12px">Open policy questions for Finance: book the receivable when the call is issued or only when cash arrives? Is a distribution a return of capital or a profit? How is VAT on the management fee treated?</p>';
+  const chip=id=>'<span class="chip"><b class="mono">'+id+'</b> '+esc(RULE_BY_ID[id].label)+'</span>';
+  const fee=S.entries.find(j=>j.reversal);
+  v.innerHTML='<h2>Rules: how events become entries</h2><p class="hint">Every event type has one rule. A rule says when it applies, which account it debits and which it credits, where the amount comes from, and why. Each journal entry links back to the rule that produced it.</p>'+
+  '<h3>How the rules fit together</h3><div class="lifecycle">'+
+    '<div>'+chip("R1")+'<span class="note">→</span>'+chip("R2")+'<span class="res">LP receivables back to zero once every LP has paid</span></div>'+
+    '<div>'+chip("R3")+'<span class="note">→</span>'+chip("R4")+'<span class="res">Payable to manager back to zero once the fee is paid</span></div>'+
+    '<div>'+chip("R5")+'<span class="res">Cash goes back to LPs</span></div>'+
+  '</div>'+
+  '<h3>The rules</h3><div class="rules">'+
+  RULES.map(r=>'<section class="rule" id="rule-'+r.id+'"><h4><span>'+r.id+'</span>'+esc(r.label)+'</h4><dl>'+
+    '<dt>When</dt><dd>'+esc(r.when)+'</dd>'+
+    '<dt>Posts</dt><dd>Debit <b>'+esc(acctName(r.dr))+'</b><br>Credit <b>'+esc(acctName(r.cr))+'</b></dd>'+
+    '<dt>Amount</dt><dd>'+esc(r.amount)+'</dd>'+
+    '<dt>Why</dt><dd>'+esc(r.why)+'</dd>'+
+    '<dt>Effect</dt><dd>'+esc(r.effect)+'</dd>'+
+    (r.policy?'<dt>Note</dt><dd class="note">'+esc(r.policy)+'</dd>':'')+
+    '<dt>Example</dt><dd>'+esc(r.ex.ref)+', €'+fmt(r.ex.amt)+postsTable([[r.dr,fmt(r.ex.amt),""],[r.cr,"",fmt(r.ex.amt)]])+'</dd>'+
+    '<dt>Used by</dt><dd>'+usedBy(j=>j.rule===r.id)+'</dd>'+
+  '</dl></section>').join("")+
+  '<section class="rule" id="rule-corrections"><h4><span>±</span>Corrections</h4><dl>'+
+    '<dt>When</dt><dd>An entry that was already approved or exported turns out to be wrong. It is never edited.</dd>'+
+    '<dt>Posts</dt><dd><b>Reversing entry:</b> the original with debits and credits swapped, so it nets to zero.<br><b>Correcting entry:</b> the original rule run again with the right amount.</dd>'+
+    '<dt>Why</dt><dd>The books keep a full trail: the original, its reversal and the correction all stay visible.</dd>'+
+    '<dt>Example</dt><dd>Q1 fee corrected from €50,000 to €48,500'+postsTable([["4000","","50,000"],["2000","50,000",""],["4000","48,500",""],["2000","","48,500"]])+'<span class="note">Lines 1–2: reversing entry. Lines 3–4: correcting entry.</span></dd>'+
+    '<dt>Used by</dt><dd>'+usedBy(j=>j.reversal||j.replacement)+(fee?'':'<span class="note"> Run "Correct an exported fee" under Approve to see one.</span>')+'</dd>'+
+  '</dl></section></div>'+
+  '<h3>Chart of accounts</h3><div class="tablewrap"><table><thead><tr><th>Account</th><th>Name</th><th>Type</th><th>What it holds</th><th>Normal side</th></tr></thead><tbody>'+
+  Object.entries(ACCOUNTS).map(([k,a])=>'<tr><td class="mono">'+k+'</td><td>'+esc(a.name)+'</td><td>'+a.type+'</td><td>'+esc(a.holds)+'</td><td>'+a.side+'</td></tr>').join("")+'</tbody></table></div>'+
+  '<p class="note" style="margin-top:8px">Placeholder numbers. A real fund uses the accountant\'s DATEV chart of accounts.</p>';
 }
 
 // ---------- scenarios ----------
@@ -499,7 +568,7 @@ function runScen(k){
     const e=S.events.find(x=>x.id==="E-104");
     const rev=makeEntry(e,{lines:orig.lines.map(l=>({...l,dr:l.cr,cr:l.dr})),text:"Reversing entry of "+orig.id+" – fee basis corrected",rule:"Reversal of "+orig.id,note:"Reverses "+orig.id+" in full. The original stays visible."});
     rev.reversal=orig.id;
-    const rep=makeEntry(e,{amount:48500,text:"Management fee charged (corrected) – FEE-Q1",note:"Replaces "+orig.id+": 2% p.a. × €9.7m fee-bearing commitments ÷ 4 = €48,500. The fee was overcharged by €1,500: 3300 now shows a €1,500 debit balance, a receivable from the manager, until the manager issues a credit note or refunds it."});
+    const rep=makeEntry(e,{amount:48500,text:"Management fee charged (corrected) – FEE-Q1",note:"Replaces "+orig.id+": 2% p.a. × €9.7m fee-bearing commitments ÷ 4 = €48,500. The fee was overcharged by €1,500: 2000 Payable to manager now shows a €1,500 debit balance, a receivable from the manager, until the manager issues a credit note or refunds it."});
     rep.replacement=orig.id;
     orig.notes.push({k:"warn",t:"Reversed by "+rev.id+", replaced by "+rep.id+"."});
     log(PEOPLE.ops,"Finance correction on "+orig.id+": created reversal "+rev.id+" and replacement "+rep.id+" (both need approval).");
@@ -509,7 +578,7 @@ function runScen(k){
     S.datevChange=true;
     const fee=feeEntry();
     fee.datevChanged=true; if(fee.status==="Reconciled") fee.status="Exported";
-    log(PEOPLE.accountant,"Changed the account on "+fee.id+" in DATEV from 6320 to 6300 by hand.");
+    log(PEOPLE.accountant,"Changed the account on "+fee.id+" in DATEV from 4000 to 4100 by hand.");
     S.tab="reconcile"; reconcile();
   }
   render();
@@ -518,7 +587,7 @@ function reconcile(){
   const exported=S.entries.filter(j=>j.status==="Exported"||j.status==="Reconciled");
   const d={};
   exported.forEach(j=>j.lines.forEach(l=>{
-    const acc=(j.datevChanged&&l.acc==="6320")?"6300":l.acc;
+    const acc=(j.datevChanged&&l.acc==="4000")?"4100":l.acc;
     d[acc]=d[acc]||{dr:0,cr:0}; d[acc].dr+=l.dr; d[acc].cr+=l.cr;
   }));
   S.datev=d;
@@ -556,6 +625,8 @@ document.addEventListener("click",ev=>{
     log(actor(),"Exported batch "+id2+" with "+a.length+" entries. Pre-checks passed.");
   }
   if(act==="reconcile"){ reconcile(); }
+  if(act==="openje"){ S.tab="approve"; S.open.add(id); S.rejecting=null; render(); const el=document.querySelector('details.je[data-je="'+id+'"]'); if(el) el.scrollIntoView({block:"center"}); return; }
+  if(act==="seerule"){ S.tab="rules"; render(); const el=document.getElementById("rule-"+id); if(el){ el.classList.add("hl"); el.scrollIntoView({block:"start"}); } return; }
   if(act==="copy"){ const t=document.getElementById("csv").textContent; const m=document.getElementById("copied");
     try{ navigator.clipboard.writeText(t).then(()=>{m.textContent="Copied.";},()=>{m.textContent="Copy isn't available here. Select the text instead.";}); }catch(e){ m.textContent="Copy isn't available here. Select the text instead."; } return; }
   if(act==="scen"){ runScen(id); return; }
