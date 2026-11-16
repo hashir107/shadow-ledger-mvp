@@ -212,10 +212,10 @@ const LPS = {A:{name:"LP A – pension fund",commitment:6000000,share:0.6},
              B:{name:"LP B – family office",commitment:4000000,share:0.4}};
 const RULES = [
   {id:"R1",type:"capital_call_issued",label:"Capital call issued",dr:"1400 LP receivables (per LP)",cr:"2000 LP capital contributions (per LP)",v:1},
-  {id:"R2",type:"contribution_received",label:"LP payment received (bank in)",dr:"1200 Bank",cr:"1400 LP receivables (per LP)",v:1},
+  {id:"R2",type:"contribution_received",label:"LP contribution received (cash receipt)",dr:"1200 Bank",cr:"1400 LP receivables (per LP)",v:1},
   {id:"R3",type:"fee_charged",label:"Management fee charged",dr:"6320 Management fee expense",cr:"3300 Payable to manager",v:1},
-  {id:"R4",type:"fee_paid",label:"Management fee paid (bank out)",dr:"3300 Payable to manager",cr:"1200 Bank",v:1},
-  {id:"R5",type:"distribution_paid",label:"Distribution paid (bank out)",dr:"2100 LP distributions (per LP)",cr:"1200 Bank",v:1}
+  {id:"R4",type:"fee_paid",label:"Management fee paid (cash payment)",dr:"3300 Payable to manager",cr:"1200 Bank",v:1},
+  {id:"R5",type:"distribution_paid",label:"Distribution paid (cash payment)",dr:"2100 LP distributions (per LP)",cr:"1200 Bank",v:1}
 ];
 const TYPE_LABEL = Object.fromEntries(RULES.map(r=>[r.type,r.label]));
 const RULE_OF = Object.fromEntries(RULES.map(r=>[r.type,r]));
@@ -231,10 +231,10 @@ function seed(){
        open:new Set(), rejecting:null, drawer:false, seq:{je:0,ev:110,b:0}};
   const ev = [
     {id:"E-101",date:"2026-01-15",source:"fund platform",type:"capital_call_issued",desc:"Capital call #1 (10% of commitments)",amount:1000000,split:{A:600000,B:400000},ref:"CALL-1",key:"CALL-1"},
-    {id:"E-102",date:"2026-01-29",source:"bank feed",type:"contribution_received",desc:"Incoming transfer from LP A",amount:600000,lp:"A",ref:"CALL-1 LP A",key:"BNK-0129-600000-LPA"},
-    {id:"E-103",date:"2026-01-30",source:"bank feed",type:"contribution_received",desc:"Incoming transfer from LP B",amount:400000,lp:"B",ref:"CAPITAL PAYMENT",key:"BNK-0130-400000-LPB",flag:"Bank reference doesn't name the call. Matched to call #1 by payer and amount: please confirm."},
+    {id:"E-102",date:"2026-01-29",source:"bank feed",type:"contribution_received",desc:"Cash receipt from LP A",amount:600000,lp:"A",ref:"CALL-1 LP A",key:"BNK-0129-600000-LPA"},
+    {id:"E-103",date:"2026-01-30",source:"bank feed",type:"contribution_received",desc:"Cash receipt from LP B",amount:400000,lp:"B",ref:"CAPITAL PAYMENT",key:"BNK-0130-400000-LPB",flag:"Bank reference doesn't name the call. Matched to call #1 by payer and amount: please confirm."},
     {id:"E-104",date:"2026-01-31",source:"fund platform",type:"fee_charged",desc:"Q1 management fee: 2% p.a. × €10m commitments ÷ 4",amount:50000,ref:"FEE-Q1",key:"FEE-Q1"},
-    {id:"E-105",date:"2026-02-05",source:"bank feed",type:"fee_paid",desc:"Outgoing transfer to manager",amount:50000,ref:"MGMT FEE Q1",key:"BNK-0205-50000-MGR"},
+    {id:"E-105",date:"2026-02-05",source:"bank feed",type:"fee_paid",desc:"Payment to manager",amount:50000,ref:"MGMT FEE Q1",key:"BNK-0205-50000-MGR"},
     {id:"E-106",date:"2026-03-20",source:"fund platform + bank feed",type:"distribution_paid",desc:"Distribution #1 paid to LPs",amount:200000,split:{A:120000,B:80000},ref:"DIST-1",key:"DIST-1"}
   ];
   ev.forEach(e=>ingest(e,true));
@@ -278,7 +278,7 @@ function makeEntry(e,opts={}){
     rule:opts.rule||(RULE_OF[e.type].id+" v"+RULE_OF[e.type].v),lines,preparedBy:PEOPLE.ops,status:"Draft",notes:[],batch:null};
   if(dr!==cr){ j.status="Needs review"; j.notes.push({k:"bad",t:"Debits and credits don't balance."}); }
   if(e.flag){ j.status="Needs review"; j.notes.push({k:"warn",t:e.flag}); }
-  if(pd!==e.date){ j.notes.push({k:"warn",t:"Back-dated: event dated "+e.date+", but Q1 is already exported. Posted in the open period (Q2) with a reference to the original date."}); }
+  if(pd!==e.date){ j.notes.push({k:"warn",t:"Prior-period item: value date "+e.date+", but Q1 is already exported. Posted as an adjustment in the open period (Q2), referencing the original date."}); }
   if(opts.note) j.notes.push({k:"",t:opts.note});
   S.entries.push(j);
   return j;
@@ -341,7 +341,7 @@ const SCEN = {
   dup:{t:"Duplicate bank line",p:"The bank feed sends LP A's €600,000 payment twice. The unique key blocks the copy, so nothing is posted twice."},
   split:{t:"Missing LP split",p:"Capital call #2 (€500,000) arrives without an LP split. It's held, not guessed, until Fund Admin adds the split."},
   fix:{t:"Correct an exported fee",p:"Finance finds the Q1 fee should be €48,500 (a fee-waived commitment). The exported entry is reversed and replaced, never edited."},
-  datev:{t:"Accountant edits in DATEV",p:"After import, the accountant moves the fee to another account by hand. Reconciliation shows the gap."}
+  datev:{t:"Accountant edits in DATEV",p:"After import, the accountant reclassifies the fee to another account with a manual posting. Reconciliation shows the difference."}
 };
 function feeEntry(){ return S.entries.find(j=>j.event==="E-104"&&!j.reversal&&!j.replacement); }
 function feeExported(){ const f=feeEntry(); return f&&(f.status==="Exported"||f.status==="Reconciled"); }
@@ -355,7 +355,7 @@ function scenCard(k){
 
 function vEvents(v){
   const open=S.events.filter(e=>(e.status==="Blocked"&&!e.dismissed)||e.status==="Needs data");
-  v.innerHTML='<h2>1 · Events</h2><p class="hint">Inputs from the fund platform (calls, fees, distributions) and the bank feed (money in and out). Each one is checked for duplicates and missing data before the rules create an entry.</p>'+
+  v.innerHTML='<h2>1 · Events</h2><p class="hint">Inputs from the fund platform (calls, fees, distributions) and the bank feed (cash receipts and payments). Each one is checked for duplicates and missing data before the rules create an entry.</p>'+
   (open.length?'<h3>Needs a person ('+open.length+')</h3>'+evTable(open):'')+
   '<h3>All events</h3>'+evTable(S.events.filter(e=>!open.includes(e)))+
   scenCard("dup")+scenCard("split")+nextBtn("approve","Go to Approve");
@@ -444,7 +444,7 @@ function fmtDE(n){return n.toLocaleString("de-DE",{minimumFractionDigits:2,maxim
 
 function vReconcile(v){
   const exported = S.entries.filter(j=>j.status==="Exported"||j.status==="Reconciled");
-  let html='<h2>4 · Reconcile with DATEV</h2><p class="hint">After the accountant imports the batch, DATEV\'s balances are compared with the platform\'s exported entries. Entries that match become Reconciled; any gap gets an owner.</p>'+
+  let html='<h2>4 · Reconcile with DATEV</h2><p class="hint">After the accountant imports the batch, DATEV\'s balances are compared with the platform\'s exported entries. Entries that match become Reconciled; any reconciling item gets an owner.</p>'+
     '<div class="row"><button type="button" class="primary" data-act="reconcile"'+(S.entries.some(j=>j.status==="Exported")?"":" disabled")+'>Simulate DATEV import and reconcile</button>'+
     (exported.length?'':'<span class="note">Export a batch first.</span>')+'</div>';
   if(S.datev){
@@ -452,9 +452,9 @@ function vReconcile(v){
     const accs = [...new Set([...Object.keys(bun),...Object.keys(S.datev)])].sort();
     const net = (o,a)=>o[a]?o[a].dr-o[a].cr:0;
     const gaps = accs.filter(a=>net(bun,a)!==net(S.datev,a));
-    html+='<p>'+(gaps.length?'<span class="ko">'+gaps.length+' accounts differ.</span> The entry changed in DATEV stays Exported until the gap is explained. Owner: Jonas, with the accountant.':'<span class="ok">All accounts match.</span> Exported entries are now Reconciled.')+'</p>'+
+    html+='<p>'+(gaps.length?'<span class="ko">'+gaps.length+' accounts differ.</span> The entry changed in DATEV stays Exported until the difference is explained. Owner: Jonas, with the accountant.':'<span class="ok">All accounts match.</span> Exported entries are now Reconciled.')+'</p>'+
       '<div class="tablewrap"><table><thead><tr><th>Account</th><th class="num">Platform (Dr +)</th><th class="num">DATEV (Dr +)</th><th>Result</th></tr></thead><tbody>'+
-      accs.map(a=>{const x=net(bun,a),y=net(S.datev,a);return '<tr><td class="mono">'+a+' '+esc(ACCOUNTS[a].name)+'</td><td class="num">'+fmtSigned(x)+'</td><td class="num">'+fmtSigned(y)+'</td><td>'+(x===y?'<span class="ok">Match</span>':'<span class="pill s-Gap">Gap '+fmtSigned(y-x)+'</span>')+'</td></tr>';}).join("")+
+      accs.map(a=>{const x=net(bun,a),y=net(S.datev,a);return '<tr><td class="mono">'+a+' '+esc(ACCOUNTS[a].name)+'</td><td class="num">'+fmtSigned(x)+'</td><td class="num">'+fmtSigned(y)+'</td><td>'+(x===y?'<span class="ok">Match</span>':'<span class="pill s-Gap">Difference '+fmtSigned(y-x)+'</span>')+'</td></tr>';}).join("")+
       '</tbody></table></div>';
   } else if(S.batches.length&&!S.entries.some(j=>j.status==="Exported")){
     html+='<div class="empty">Everything exported is reconciled.</div>';
@@ -474,11 +474,11 @@ function vLedger(v){
     return {called,paid,dist,net:paid-dist,unfunded:LPS[k].commitment-called};
   };
   v.innerHTML='<h2>Ledger &amp; LP accounts</h2><p class="hint">Reference view: the same entries sorted by account. '+previewToggle()+'</p>'+
-  '<h3>LP capital accounts</h3><div class="tablewrap"><table><thead><tr><th>LP</th><th class="num">Commitment</th><th class="num">Called</th><th class="num">Paid in</th><th class="num">Distributed</th><th class="num">Net contributed</th><th class="num">Unfunded</th></tr></thead><tbody>'+
+  '<h3>LP capital accounts</h3><div class="tablewrap"><table><thead><tr><th>LP</th><th class="num">Commitment</th><th class="num">Called</th><th class="num">Paid in</th><th class="num">Distributed</th><th class="num">Net contributed capital</th><th class="num">Unfunded commitment</th></tr></thead><tbody>'+
   Object.keys(LPS).map(k=>{const x=lp(k);return '<tr><td>'+esc(LPS[k].name)+'</td><td class="num">'+fmt(LPS[k].commitment)+'</td><td class="num">'+fmt(x.called)+'</td><td class="num">'+fmt(x.paid)+'</td><td class="num">'+fmt(x.dist)+'</td><td class="num">'+fmtSigned(x.net)+'</td><td class="num">'+fmt(x.unfunded)+'</td></tr>';}).join("")+
   '</tbody></table></div>'+
   '<h3>Account ledger</h3><div class="row"><label for="acc" class="note">Account</label><select id="acc">'+Object.entries(ACCOUNTS).map(([k,a])=>'<option value="'+k+'"'+(k===acc?" selected":"")+'>'+k+' '+esc(a.name)+'</option>').join("")+'</select></div>'+
-  '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Entry</th><th>Text</th><th>LP</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance (Dr +)</th></tr></thead><tbody>'+
+  '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Entry</th><th>Text</th><th>LP</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Running balance (Dr +)</th></tr></thead><tbody>'+
   (rows.length?rows.map(({j,l})=>{run+=l.dr-l.cr;return '<tr><td class="mono">'+j.date+'</td><td class="mono">'+j.id+'</td><td>'+esc(j.text)+'</td><td>'+(l.lp?"LP "+l.lp:"")+'</td><td class="num">'+fmt(l.dr)+'</td><td class="num">'+fmt(l.cr)+'</td><td class="num">'+fmtSigned(run)+'</td></tr>';}).join(""):'<tr><td colspan="7" class="note">No postings on this account yet.</td></tr>')+
   '</tbody></table></div>';
 }
@@ -495,7 +495,7 @@ function openItems(rows){
   const r=rows.find(x=>x.acc==="1400"), p=rows.find(x=>x.acc==="3300");
   const bits=[];
   bits.push(r?"LP receivables of €"+fmt(r.dr||r.cr)+" are still open: capital called but not yet paid.":"LP receivables are zero: every call has been paid.");
-  if(p&&p.dr) bits.push("Payable to manager shows a €"+fmt(p.dr)+" debit: the manager owes the fund a refund after the fee correction.");
+  if(p&&p.dr) bits.push("Payable to manager shows a €"+fmt(p.dr)+" debit balance: a receivable from the manager after the fee correction, cleared by a credit note or refund.");
   else if(p&&p.cr) bits.push("€"+fmt(p.cr)+" is still owed to the manager.");
   else bits.push("Payable to manager is zero: the fee is settled.");
   return bits.join(" ");
@@ -512,14 +512,14 @@ function vRules(v){
 // ---------- scenarios ----------
 function runScen(k){
   S.scen[k]=true;
-  if(k==="dup"){ ingest({id:"E-"+(++S.seq.ev),date:"2026-01-29",source:"bank feed",type:"contribution_received",desc:"Incoming transfer from LP A (resent by bank)",amount:600000,lp:"A",ref:"CALL-1 LP A",key:"BNK-0129-600000-LPA"}); S.tab="events"; }
+  if(k==="dup"){ ingest({id:"E-"+(++S.seq.ev),date:"2026-01-29",source:"bank feed",type:"contribution_received",desc:"Cash receipt from LP A (resent by bank)",amount:600000,lp:"A",ref:"CALL-1 LP A",key:"BNK-0129-600000-LPA"}); S.tab="events"; }
   if(k==="split"){ ingest({id:"E-"+(++S.seq.ev),date:"2026-03-25",source:"fund platform",type:"capital_call_issued",desc:"Capital call #2 (5% of commitments)",amount:500000,split:null,ref:"CALL-2",key:"CALL-2"}); S.tab="events"; }
   if(k==="fix"){
     const orig=feeEntry();
     const e=S.events.find(x=>x.id==="E-104");
-    const rev=makeEntry(e,{lines:orig.lines.map(l=>({...l,dr:l.cr,cr:l.dr})),text:"Reversal of "+orig.id+" – fee basis corrected",rule:"Reversal of "+orig.id,note:"Reverses "+orig.id+" in full. The original stays visible."});
+    const rev=makeEntry(e,{lines:orig.lines.map(l=>({...l,dr:l.cr,cr:l.dr})),text:"Reversing entry of "+orig.id+" – fee basis corrected",rule:"Reversal of "+orig.id,note:"Reverses "+orig.id+" in full. The original stays visible."});
     rev.reversal=orig.id;
-    const rep=makeEntry(e,{amount:48500,text:"Management fee charged (corrected) – FEE-Q1",note:"Replaces "+orig.id+": 2% p.a. × €9.7m fee-bearing commitments ÷ 4 = €48,500. The manager now owes €1,500 back, which shows as a debit on 3300 until refunded."});
+    const rep=makeEntry(e,{amount:48500,text:"Management fee charged (corrected) – FEE-Q1",note:"Replaces "+orig.id+": 2% p.a. × €9.7m fee-bearing commitments ÷ 4 = €48,500. The fee was overcharged by €1,500: 3300 now shows a €1,500 debit balance, a receivable from the manager, until the manager issues a credit note or refunds it."});
     rep.replacement=orig.id;
     orig.notes.push({k:"warn",t:"Reversed by "+rev.id+", replaced by "+rep.id+"."});
     log(PEOPLE.ops,"Finance correction on "+orig.id+": created reversal "+rev.id+" and replacement "+rep.id+" (both need approval).");
@@ -544,7 +544,7 @@ function reconcile(){
   S.datev=d;
   let n=0;
   exported.forEach(j=>{ if(!j.datevChanged && j.status==="Exported"){ j.status="Reconciled"; n++; } });
-  log(PEOPLE.system,"Compared DATEV balances with the platform: "+n+" entries reconciled"+(S.datevChange?", 1 gap on the fee entry (owner: Jonas).":"."));
+  log(PEOPLE.system,"Compared DATEV balances with the platform: "+n+" entries reconciled"+(S.datevChange?", 1 reconciling item on the fee entry (owner: Jonas).":"."));
 }
 function setRole(r){ S.role=r; document.getElementById("role").value=r; S.rejecting=null; log(actor(),"Switched role."); }
 

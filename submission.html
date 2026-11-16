@@ -46,9 +46,9 @@
               <tr><th scope="row">v1 scope</th><td>One fund; capital calls, management fees and distributions. Outputs: journals, LP sub-ledger, trial balance, DATEV import file.</td></tr>
               <tr><th scope="row">Personas</th><td>Fund Admin (user &amp; approver), External Accountant using DATEV (reviewer).</td></tr>
               <tr><th scope="row">Boundary</th><td>The platform is the sub-ledger; DATEV stays the general ledger of record. The accountant keeps the judgement: closing adjustments, statements, tax.</td></tr>
-              <tr><th scope="row">Validate first</th><td>Trace 10–20 events from source to booking, sort mismatches by type, measure close days.</td></tr>
+              <tr><th scope="row">Validate first</th><td>Trace 10–20 events from source document to posting, classify reconciling items by type, measure days to close.</td></tr>
               <tr><th scope="row">Principles</th><td>Correct books first, every entry traces back, append-only, review exceptions rather than everything.</td></tr>
-              <tr><th scope="row">Corrections</th><td>Reversal plus a linked replacement, never an edit. Back-dated items post in the open period, referencing the original.</td></tr>
+              <tr><th scope="row">Corrections</th><td>Reversing entry plus a linked correcting entry, never an edit. Prior-period items post as adjustments in the current open period, referencing the original document.</td></tr>
               <tr><th scope="row">Milestones</th><td>M0 discovery → M1 shadow mode → M2 live for the flagship fund. Timeline to be set once all constraints are known.</td></tr>
               <tr><th scope="row">Success</th><td>Leading: entries booked with no manual change, adoption. Lagging: days to close, Fund Admin hours per fund.</td></tr>
               <tr><th scope="row">Biggest risk</th><td>Wrong entries that look right. Mitigated by accountant sign-off on the mapping, shadow mode and four-eyes approval.</td></tr>
@@ -91,16 +91,16 @@
           <h4>Today each event is re-keyed twice; with the ledger it is generated once</h4>
           <p class="lane-label">Today</p>
           <div class="lane">
-            <div class="box"><b>Platform + bank data</b><span>events, money in/out</span></div>
+            <div class="box"><b>Platform + bank data</b><span>capital events, cash receipts and payments</span></div>
             <div class="box manual"><b>Fund Admin re-key</b><span>into spreadsheets</span></div>
-            <div class="box manual"><b>Accountant re-keys</b><span>into DATEV by hand</span></div>
-            <div class="box manual"><b>Reconcile by email</b><span>mismatches found late</span></div>
+            <div class="box manual"><b>Accountant re-keys</b><span>manual postings in DATEV</span></div>
+            <div class="box manual"><b>Reconcile by email</b><span>reconciling items found late</span></div>
           </div>
           <p class="loop">↺ questions go back and forth</p>
           <hr>
           <p class="lane-label">With the Shadow Ledger</p>
           <div class="lane">
-            <div class="box"><b>Platform + bank data</b><span>events, money in/out</span></div>
+            <div class="box"><b>Platform + bank data</b><span>capital events, cash receipts and payments</span></div>
             <div class="box"><b>Rules make entries</b><span>mapping signed off</span></div>
             <div class="box"><b>Fund Admin review</b><span>exceptions only</span></div>
             <div class="box target"><b>DATEV import</b><span>no retyping</span></div>
@@ -114,7 +114,7 @@
             <thead><tr><th>Persona</th><th>Pain today</th><th>Good outcome</th></tr></thead>
             <tbody>
               <tr><td>Fund Admin (user &amp; approver) and management</td><td>Re-key events into spreadsheets for the accountant and chase mismatches; can't see the books until the accountant has posted; cost grows with each fund, with little view of close status across funds</td><td>Entries are generated automatically and Fund Admin handle only exceptions; reviews and approves in one place and trusts the numbers; lower cost to serve, with one view of close progress and errors</td></tr>
-              <tr><td>External Accountant using DATEV (reviewer)</td><td>Gets spreadsheets or PDFs, interprets them and posts by hand</td><td>A balanced import file in their own chart of accounts, traceable to source</td></tr>
+              <tr><td>External Accountant using DATEV (reviewer)</td><td>Gets spreadsheets or PDFs, interprets them and posts manual journal entries</td><td>A balanced import file in their own chart of accounts, traceable to source</td></tr>
               <tr><td>CFO (Fund Manager), buyer</td><td>Slow LP reporting; accounting fees; operational risk</td><td>A faster, cheaper, lower-risk close; credible numbers for LPs</td></tr>
               <tr><td>LPs (indirect)</td><td>Late or corrected capital account statements</td><td>Correct statements on time; confidence in the manager</td></tr>
               <tr><td>Auditors (not a v1 user)</td><td>Trace balances back through spreadsheets and emails</td><td>Every entry traceable to source, rule and approver; no silent edits</td></tr>
@@ -139,7 +139,7 @@
               <tr><td>Journals, LP sub-ledger, fund trial balance</td><td>Owns</td><td>–</td></tr>
               <tr><td>Review and approval</td><td>Owns the workflow; Fund Admin approves</td><td>–</td></tr>
               <tr><td>Export</td><td>Builds, validates, tracks status</td><td>Imports</td></tr>
-              <tr><td>Closing adjustments, statements, tax, period lock</td><td>–</td><td>Owns</td></tr>
+              <tr><td>Year-end closing entries, financial statements, tax, period close</td><td>–</td><td>Owns</td></tr>
             </tbody>
           </table>
         </div>
@@ -160,7 +160,7 @@
             </ul>
           </li>
           <li><b>Manual work:</b> trace 10–20 events from source to booking, counting touches, handoffs and minutes per event. Sit in on one quarter-end close.</li>
-          <li><b>Errors:</b> match platform events to DATEV postings on amount, date and account. Sort mismatches by type (missing, timing, amount, wrong account, duplicate) and fix the biggest category first.</li>
+          <li><b>Errors:</b> match platform events to DATEV postings on amount, date and account. Classify reconciling items by type (missing, timing, amount, wrong account, duplicate) and fix the biggest category first.</li>
           <li><b>Close time:</b> days from period end to sign-off, and where the waiting happens.</li>
           <li><b>Business link:</b> fewer Fund Admin hours per fund (the platform grows funds faster than headcount), a faster close and faster LP reporting, fewer corrections and more trust, and a structured ledger as the base for later reporting (capital accounts, NAV).</li>
         </ul>
@@ -184,7 +184,7 @@
         <ul>
           <li><b>Correct books first.</b> One wrong export costs more trust than ten manual entries save, hence shadow mode and review/approval.</li>
           <li><b>Every entry traces back.</b> Each one links to its source event, rule version and export batch. No entry exists without a source.</li>
-          <li><b>Append-only.</b> Approved or exported entries are never edited. A correction is a reversal plus a new, linked entry. Finance should confirm the specific German audit requirements.</li>
+          <li><b>Append-only.</b> Approved or exported entries are never edited. A correction is a reversing entry plus a new, linked correcting entry. Finance should confirm the specific German audit requirements.</li>
           <li><b>A standard core, flexible at the edges.</b> One event model and ledger for every fund; fund-specific charts, policies and reports through configuration first, bounded versioned extensions second. Finance owns the mapping rules, the accountant signs them off, and repeat needs become standard product.</li>
           <li><b>Review exceptions, not everything.</b> Clean entries are batch-approved, and automation is earned: auto-approval only after a full quarter with no corrections.</li>
         </ul>
@@ -195,10 +195,10 @@
             <tbody>
               <tr><td>Duplicate event</td><td>A unique key (source ID + bank reference) flags the second copy instead of posting it</td></tr>
               <tr><td>Missing data (e.g. no LP split)</td><td>Held in <em>Needs review</em> with a reason; never guessed</td></tr>
-              <tr><td>Wrong mapping</td><td>Fix the rule as a new version; review affected entries; reverse and repost through approval</td></tr>
-              <tr><td>Back-dated event</td><td>Open period: post on the original date. Exported period: post in the current period, referencing the original</td></tr>
-              <tr><td>Failed export</td><td>Checked before export (balanced, accounts exist, period open); all or nothing; safe retry</td></tr>
-              <tr><td>Reconciliation gap</td><td>Platform vs DATEV trial balance at period end, plus bank vs ledger cash; each gap gets an owner</td></tr>
+              <tr><td>Wrong mapping</td><td>Fix the rule as a new version; identify affected entries; reverse and re-post through approval</td></tr>
+              <tr><td>Back-dated event</td><td>Open period: post with the original value date. Closed or exported period: post as a prior-period adjustment in the current period, referencing the original document</td></tr>
+              <tr><td>Failed export</td><td>Validated before export (debits equal credits, accounts exist in the chart of accounts, posting period open); all or nothing; safe retry</td></tr>
+              <tr><td>Reconciliation gap</td><td>Platform vs DATEV trial balance at period end, plus bank statement vs cash ledger (bank reconciliation); each gap gets an owner</td></tr>
             </tbody>
           </table>
         </div>
