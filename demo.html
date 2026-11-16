@@ -406,7 +406,7 @@ function entryActions(j){
 function vExport(v){
   const approved = S.entries.filter(j=>j.status==="Approved");
   const lastBatch = S.batches[S.batches.length-1];
-  let html='<h2>3 · Export to DATEV</h2><p class="hint">Only approved entries go out. Before export the batch is checked (balanced, accounts exist, period open), and it goes out whole or not at all. Once Q1 is exported, later Q1 items post in the open period with a reference.</p>'+
+  let html='<h2>3 · Export to DATEV</h2><p class="hint">Only approved entries go out. Before export the batch is validated (debits equal credits, accounts exist in the chart of accounts, posting period open), and it goes out whole or not at all. Once Q1 is exported, later Q1 items post as prior-period adjustments in the open period, referencing the original.</p>'+
    '<div class="row"><button type="button" class="primary" data-act="export"'+(approved.length?"":" disabled")+'>Export '+approved.length+' approved '+(approved.length===1?"entry":"entries")+' as a batch</button>'+
    (approved.length?'':'<span class="note">Nothing approved is waiting.</span>')+'</div>';
   if(S.batches.length){
