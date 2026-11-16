@@ -42,15 +42,15 @@
         <div class="tablewrap">
           <table>
             <tbody>
-              <tr><th scope="row">Problem</th><td>The same capital events are re-keyed twice, by ops and by the accountant. Generate the entries once, with a full trail.</td></tr>
+              <tr><th scope="row">Problem</th><td>The same capital events are re-keyed twice, by Fund Admin and by the accountant. Generate the entries once, with a full trail.</td></tr>
               <tr><th scope="row">v1 scope</th><td>One fund; capital calls, management fees and distributions. Outputs: journals, LP sub-ledger, trial balance, DATEV import file.</td></tr>
-              <tr><th scope="row">Personas</th><td>Fund admin (primary user), fund controller (approver), external accountant (decides whether it worked).</td></tr>
+              <tr><th scope="row">Personas</th><td>Fund Admin (user &amp; approver), External Accountant using DATEV (reviewer).</td></tr>
               <tr><th scope="row">Boundary</th><td>The platform is the sub-ledger; DATEV stays the general ledger of record. The accountant keeps the judgement: closing adjustments, statements, tax.</td></tr>
               <tr><th scope="row">Validate first</th><td>Trace 10–20 events from source to booking, sort mismatches by type, measure close days.</td></tr>
               <tr><th scope="row">Principles</th><td>Correct books first, every entry traces back, append-only, review exceptions rather than everything.</td></tr>
               <tr><th scope="row">Corrections</th><td>Reversal plus a linked replacement, never an edit. Back-dated items post in the open period, referencing the original.</td></tr>
               <tr><th scope="row">Milestones</th><td>M0 discovery → M1 shadow mode → M2 live for the flagship fund. Timeline to be set once all constraints are known.</td></tr>
-              <tr><th scope="row">Success</th><td>Leading: entries booked with no manual change, adoption. Lagging: days to close, ops hours per fund.</td></tr>
+              <tr><th scope="row">Success</th><td>Leading: entries booked with no manual change, adoption. Lagging: days to close, Fund Admin hours per fund.</td></tr>
               <tr><th scope="row">Biggest risk</th><td>Wrong entries that look right. Mitigated by accountant sign-off on the mapping, shadow mode and four-eyes approval.</td></tr>
             </tbody>
           </table>
@@ -60,7 +60,7 @@
 
       <!-- SECTION: Intro -->
       <section id="intro">
-        <p class="lead">Today the same capital events are turned into accounting entries several times, by different people in different tools. In v1, the platform generates those entries once, with a full trail. A controller approves them, and the accountant imports them into DATEV instead of retyping. For the fund administrator, this lowers the cost of serving each fund. For customers, it means a faster, more reliable closing and reporting.</p>
+        <p class="lead">Today the same capital events are turned into accounting entries several times, by different people in different tools. In v1, the platform generates those entries once, with a full trail. Fund Admin approves them, and the accountant imports them into DATEV instead of retyping. For the fund administrator, this lowers the cost of serving each fund. For customers, it means a faster, more reliable closing and reporting.</p>
         <p><em>Assumptions:</em> one closed-ended fund in Germany, with an external accountant keeping the books in DATEV. The platform already holds capital call and distribution data and receives bank transactions.</p>
 
         <h3>What we know, assume and don't know yet</h3>
@@ -85,14 +85,14 @@
       <!-- SECTION: 1. Problem Setup -->
       <section id="problem">
         <h2><span class="n">1</span>Problem Setup</h2>
-        <p>There is no single trusted version of how an event became a booking, so ops re-key data, the accountant reinterprets it, and the controller reconciles two sources.</p>
+        <p>There is no single trusted version of how an event became a booking, so Fund Admin re-key data and reconcile two sources, and the accountant reinterprets it.</p>
 
         <figure class="flowfig" aria-label="Current vs future workflow">
           <h4>Today each event is re-keyed twice; with the ledger it is generated once</h4>
           <p class="lane-label">Today</p>
           <div class="lane">
             <div class="box"><b>Platform + bank data</b><span>events, money in/out</span></div>
-            <div class="box manual"><b>Ops re-key</b><span>into spreadsheets</span></div>
+            <div class="box manual"><b>Fund Admin re-key</b><span>into spreadsheets</span></div>
             <div class="box manual"><b>Accountant re-keys</b><span>into DATEV by hand</span></div>
             <div class="box manual"><b>Reconcile by email</b><span>mismatches found late</span></div>
           </div>
@@ -102,7 +102,7 @@
           <div class="lane">
             <div class="box"><b>Platform + bank data</b><span>events, money in/out</span></div>
             <div class="box"><b>Rules make entries</b><span>mapping signed off</span></div>
-            <div class="box"><b>Controller review</b><span>exceptions only</span></div>
+            <div class="box"><b>Fund Admin review</b><span>exceptions only</span></div>
             <div class="box target"><b>DATEV import</b><span>no retyping</span></div>
           </div>
           <p class="loop">↺ platform and DATEV balances reconciled</p>
@@ -113,10 +113,9 @@
           <table>
             <thead><tr><th>Persona</th><th>Pain today</th><th>Good outcome</th></tr></thead>
             <tbody>
-              <tr><td>Fund administrator: ops team (primary user) and management</td><td>Ops re-key events into spreadsheets for the accountant and chase mismatches; ops cost grows with each fund, with little view of close status across funds</td><td>Entries are generated automatically and ops handle only exceptions; lower cost to serve, with one view of close progress and errors</td></tr>
-              <tr><td>Fund controller / CFO (approver)</td><td>Can't see the books until the accountant has posted; reconciles two sources</td><td>Reviews and approves in one place; trusts the numbers</td></tr>
-              <tr><td>External accountant (receives the output)</td><td>Gets spreadsheets or PDFs, interprets them and posts by hand</td><td>A balanced import file in their own chart of accounts, traceable to source</td></tr>
-              <tr><td>GP / fund manager (buyer)</td><td>Slow LP reporting; accounting fees; operational risk</td><td>A faster, cheaper, lower-risk close; credible numbers for LPs</td></tr>
+              <tr><td>Fund Admin (user &amp; approver) and management</td><td>Re-key events into spreadsheets for the accountant and chase mismatches; can't see the books until the accountant has posted; cost grows with each fund, with little view of close status across funds</td><td>Entries are generated automatically and Fund Admin handle only exceptions; reviews and approves in one place and trusts the numbers; lower cost to serve, with one view of close progress and errors</td></tr>
+              <tr><td>External Accountant using DATEV (reviewer)</td><td>Gets spreadsheets or PDFs, interprets them and posts by hand</td><td>A balanced import file in their own chart of accounts, traceable to source</td></tr>
+              <tr><td>GP / fund manager / CFO (buyer)</td><td>Slow LP reporting; accounting fees; operational risk</td><td>A faster, cheaper, lower-risk close; credible numbers for LPs</td></tr>
               <tr><td>LPs (indirect)</td><td>Late or corrected capital account statements</td><td>Correct statements on time; confidence in the manager</td></tr>
               <tr><td>Auditors (not a v1 user)</td><td>Trace balances back through spreadsheets and emails</td><td>Every entry traceable to source, rule and approver; no silent edits</td></tr>
               <tr><td>Regulators, e.g. BaFin (not a v1 user)</td><td>Expect proper bookkeeping, retention and accurate reporting (rules to confirm with Legal)</td><td>Complete, unaltered, retained records that tie to reports</td></tr>
@@ -124,7 +123,7 @@
           </table>
         </div>
 
-        <p>v1 is designed for ops and the controller. The others benefit indirectly: the audit trail and append-only records serve auditors and regulators from day one. The accountant decides whether it worked: if they still retype, we haven't solved the problem.</p>
+        <p>v1 is designed for Fund Admin. The others benefit indirectly: the audit trail and append-only records serve auditors and regulators from day one. The accountant decides whether it worked: if they still retype, we haven't solved the problem.</p>
         <p><b>v1 scope:</b> one fund and three event types: capital calls (the call and the LP payment), management fees (charged and paid) and distributions. They're the core of fund life, the platform already holds their data, and they're rule-based.</p>
         <p>Outputs: journals, a per-LP sub-ledger, a fund trial balance, review and approval, a DATEV import file, and reconciliation against the bank.</p>
         <p><b>Deliberately out of v1:</b> other fund expenses (they need invoice data, VAT rules and accruals; first in line for v1.5), FX, carry and waterfall calculations, NAV and valuations, multiple funds or jurisdictions, financial statements and tax, two-way DATEV sync, and auto-approval.</p>
@@ -138,7 +137,7 @@
               <tr><td>Ingest and normalise events</td><td>Owns</td><td>–</td></tr>
               <tr><td>Mapping rules (event → accounts)</td><td>Runs them, versioned</td><td>Defines and signs them off</td></tr>
               <tr><td>Journals, LP sub-ledger, fund trial balance</td><td>Owns</td><td>–</td></tr>
-              <tr><td>Review and approval</td><td>Owns the workflow; controller approves</td><td>–</td></tr>
+              <tr><td>Review and approval</td><td>Owns the workflow; Fund Admin approves</td><td>–</td></tr>
               <tr><td>Export</td><td>Builds, validates, tracks status</td><td>Imports</td></tr>
               <tr><td>Closing adjustments, statements, tax, period lock</td><td>–</td><td>Owns</td></tr>
             </tbody>
@@ -155,7 +154,7 @@
           <li><b>What I'd ask to see (last 2–4 quarters of the flagship fund):</b>
             <ul>
               <li>from DATEV: the booking journal, trial balance and chart of accounts</li>
-              <li>the spreadsheets and emails ops send the accountant, and the questions that come back</li>
+              <li>the spreadsheets and emails Fund Admin send the accountant, and the questions that come back</li>
               <li>call and distribution notices, fee calculations and bank statements</li>
               <li>the close calendar</li>
             </ul>
@@ -163,7 +162,7 @@
           <li><b>Manual work:</b> trace 10–20 events from source to booking, counting touches, handoffs and minutes per event. Sit in on one quarter-end close.</li>
           <li><b>Errors:</b> match platform events to DATEV postings on amount, date and account. Sort mismatches by type (missing, timing, amount, wrong account, duplicate) and fix the biggest category first.</li>
           <li><b>Close time:</b> days from period end to sign-off, and where the waiting happens.</li>
-          <li><b>Business link:</b> fewer ops hours per fund (the platform grows funds faster than headcount), a faster close and faster LP reporting, fewer corrections and more trust, and a structured ledger as the base for later reporting (capital accounts, NAV).</li>
+          <li><b>Business link:</b> fewer Fund Admin hours per fund (the platform grows funds faster than headcount), a faster close and faster LP reporting, fewer corrections and more trust, and a structured ledger as the base for later reporting (capital accounts, NAV).</li>
         </ul>
 
         <p><b>Sample workflow:</b> the <a href="demo.html">Shadow Ledger prototype</a> is a clickable mock-up of the workflow, with invented data. Example Fund I has two LPs (60/40), and its Q1 includes a €1m capital call, a €50k management fee and a €200k distribution. The prototype shows:</p>
@@ -204,8 +203,8 @@
           </table>
         </div>
 
-        <p><b>Review and approval:</b> Draft → Needs review (only if flagged) → Approved → Exported → Reconciled. Ops prepare entries and the fund controller approves; nobody approves their own entries. A rejected entry goes back to Draft with a reason, and a failed export goes back to Approved once it's fixed. Every change records who, when and why.</p>
-        <p><b>Quick win on the real foundation:</b> a DATEV import for capital calls saves visible time for ops and the accountant within one quarter. It's built on the real event and rule model, just narrowly, so we never ship a throwaway script.</p>
+        <p><b>Review and approval:</b> Draft → Needs review (only if flagged) → Approved → Exported → Reconciled. One Fund Admin prepares entries and another approves; nobody approves their own entries. A rejected entry goes back to Draft with a reason, and a failed export goes back to Approved once it's fixed. Every change records who, when and why.</p>
+        <p><b>Quick win on the real foundation:</b> a DATEV import for capital calls saves visible time for Fund Admin and the accountant within one quarter. It's built on the real event and rule model, just narrowly, so we never ship a throwaway script.</p>
 
         <div class="tablewrap">
           <table>
@@ -229,14 +228,14 @@
             <thead><tr><th>Type</th><th>Metric</th><th>Why it matters</th></tr></thead>
             <tbody>
               <tr><td><span class="tag lead-i">Leading</span></td><td>Manual changes after export: share of in-scope events booked in DATEV with no manual change, and corrections per 100 exported entries</td><td>Shows within weeks whether the duplicated work is really gone. Strict: an edited entry doesn't count</td></tr>
-              <tr><td><span class="tag lead-i">Leading</span></td><td>Adoption: share of the fund's in-scope events processed through the ledger rather than spreadsheets</td><td>Whether ops, controllers and the accountant actually use it</td></tr>
+              <tr><td><span class="tag lead-i">Leading</span></td><td>Adoption: share of the fund's in-scope events processed through the ledger rather than spreadsheets</td><td>Whether Fund Admin and the accountant actually use it</td></tr>
               <tr><td><span class="tag lag-i">Lagging</span></td><td>Time to close the quarter: days from period end to signed-off books</td><td>What the CFO feels and tells LPs</td></tr>
-              <tr><td><span class="tag lag-i">Lagging</span></td><td>Ops hours spent per fund per quarter</td><td>The administrator's cost to serve; growing funds faster than headcount</td></tr>
+              <tr><td><span class="tag lag-i">Lagging</span></td><td>Fund Admin hours spent per fund per quarter</td><td>The administrator's cost to serve; growing funds faster than headcount</td></tr>
             </tbody>
           </table>
         </div>
         <p>Leading indicators show early whether v1 works; lagging ones prove business value after a quarter and, over time, fund retention. All are baselined in discovery.</p>
-        <p><b>Communicating:</b> CFOs and controllers get a plain-language quarterly close summary (what was processed, corrected and why, and close days); accountants get a discrepancy list linked to source.</p>
+        <p><b>Communicating:</b> CFOs and fund managers get a plain-language quarterly close summary (what was processed, corrected and why, and close days); accountants get a discrepancy list linked to source.</p>
       </section>
 
       <!-- SECTION: 5. Risks & Tradeoffs -->
@@ -247,7 +246,7 @@
             <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
             <tbody>
               <tr><td>Biggest risk: wrong entries that look right (bad mapping, automating too early)</td><td>Accountant signs off the mapping; shadow mode before go-live; four-eyes approval; reversals; auto-approval only after a clean quarter</td></tr>
-              <tr><td>Poor or late source data (e.g. unclear bank references)</td><td>Validate on ingest; hold incomplete events; report data quality back to ops and fund managers</td></tr>
+              <tr><td>Poor or late source data (e.g. unclear bank references)</td><td>Validate on ingest; hold incomplete events; report data quality back to Fund Admin and fund managers</td></tr>
               <tr><td>The accountant doesn't adopt it (extra work, or a threat to their role)</td><td>Design it with them, in their chart of accounts; importing must be less work than typing</td></tr>
               <tr><td>Customer-specific charts and policies</td><td>A standard core with per-fund configuration; bounded extensions where needed, reviewed so repeat needs become product features</td></tr>
               <tr><td>Audit, retention and liability</td><td>Append-only records and audit log; confirm with Finance and Legal; the accountant keeps the final sign-off</td></tr>

@@ -167,8 +167,8 @@ pre.csv{background:var(--info-soft);border:1px solid var(--line);border-radius:1
     <div class="controls">
       <label class="role" for="role">Acting as
         <select id="role">
-          <option value="controller">Jonas, fund controller (approver)</option>
-          <option value="ops">Mara, fund ops (preparer)</option>
+          <option value="controller">Jonas, Fund Admin (approver)</option>
+          <option value="ops">Mara, Fund Admin (preparer)</option>
         </select>
       </label>
       <button id="history" type="button" data-act="history">History</button>
@@ -219,7 +219,7 @@ const RULES = [
 ];
 const TYPE_LABEL = Object.fromEntries(RULES.map(r=>[r.type,r.label]));
 const RULE_OF = Object.fromEntries(RULES.map(r=>[r.type,r]));
-const PEOPLE = {ops:"Mara (fund ops)",controller:"Jonas (controller)",system:"Rules engine",accountant:"Accountant (DATEV)"};
+const PEOPLE = {ops:"Mara (Fund Admin)",controller:"Jonas (Fund Admin)",system:"Rules engine",accountant:"External Accountant (DATEV, reviewer)"};
 const STEPS = [["events","Events"],["approve","Approve"],["export","Export"],["reconcile","Reconcile"]];
 const BOOKS = [["ledger","Ledger & LPs"],["tb","Trial balance"],["rules","Rules"]];
 const REASONS = ["Wrong amount","Wrong account","Missing support"];
@@ -289,8 +289,8 @@ function ingest(e,quiet){
   if(dup){ e.status="Blocked"; e.note="Duplicate of "+dup.id+" (same bank date, amount and payer). Not posted."; S.events.push(e);
     if(!quiet) log(PEOPLE.system,"Blocked "+e.id+": duplicate of "+dup.id+". No entry created."); return; }
   if((e.type==="capital_call_issued"||e.type==="distribution_paid") && !e.split){
-    e.status="Needs data"; e.note="LP split missing. The system doesn't guess: ops must add it from the call notice."; S.events.push(e);
-    if(!quiet) log(PEOPLE.system,"Held "+e.id+": LP split missing. No entry created until ops adds it."); return; }
+    e.status="Needs data"; e.note="LP split missing. The system doesn't guess: Fund Admin must add it from the call notice."; S.events.push(e);
+    if(!quiet) log(PEOPLE.system,"Held "+e.id+": LP split missing. No entry created until Fund Admin adds it."); return; }
   e.status="Processed"; S.events.push(e);
   const j = makeEntry(e);
   if(!quiet) log(PEOPLE.system,"Created "+j.id+" from "+e.id+" using "+j.rule+" ("+j.status+").");
@@ -339,7 +339,7 @@ function nextBtn(k,text){ return '<div class="next"><button type="button" class=
 
 const SCEN = {
   dup:{t:"Duplicate bank line",p:"The bank feed sends LP A's €600,000 payment twice. The unique key blocks the copy, so nothing is posted twice."},
-  split:{t:"Missing LP split",p:"Capital call #2 (€500,000) arrives without an LP split. It's held, not guessed, until ops add the split."},
+  split:{t:"Missing LP split",p:"Capital call #2 (€500,000) arrives without an LP split. It's held, not guessed, until Fund Admin adds the split."},
   fix:{t:"Correct an exported fee",p:"Finance finds the Q1 fee should be €48,500 (a fee-waived commitment). The exported entry is reversed and replaced, never edited."},
   datev:{t:"Accountant edits in DATEV",p:"After import, the accountant moves the fee to another account by hand. Reconciliation shows the gap."}
 };
@@ -370,7 +370,7 @@ function evTable(list){
 }
 function eventActions(e){
   if(e.status==="Blocked"&&!e.dismissed) return '<div class="row" style="margin:6px 0 0"><button type="button" class="small" data-act="dismiss" data-id="'+e.id+'">Confirm duplicate and dismiss</button></div>';
-  if(e.status==="Needs data") return '<div class="row" style="margin:6px 0 0"><button type="button" class="small primary" data-act="addsplit" data-id="'+e.id+'"'+(S.role!=="ops"?' disabled':'')+'>Add LP split from call notice (60/40)</button>'+(S.role!=="ops"?'<span class="note">Only ops fix source data. <button type="button" class="link" data-act="as-ops">Switch to Mara</button></span>':'')+'</div>';
+  if(e.status==="Needs data") return '<div class="row" style="margin:6px 0 0"><button type="button" class="small primary" data-act="addsplit" data-id="'+e.id+'"'+(S.role!=="ops"?' disabled':'')+'>Add LP split from call notice (60/40)</button>'+(S.role!=="ops"?'<span class="note">Only the preparer fixes source data. <button type="button" class="link" data-act="as-ops">Switch to Mara</button></span>':'')+'</div>';
   return "";
 }
 
@@ -380,10 +380,10 @@ function vApprove(v){
   const back=S.entries.filter(j=>j.rejected);
   const clean=S.entries.filter(j=>j.status==="Draft"&&!j.rejected);
   const done=S.entries.filter(j=>["Approved","Exported","Reconciled"].includes(j.status));
-  v.innerHTML='<h2>2 · Approve entries</h2><p class="hint">The rules turned each event into a journal entry. Mara (ops) prepared them; Jonas approves. Nobody approves their own work. Click an entry to see its debit and credit lines.</p>'+
+  v.innerHTML='<h2>2 · Approve entries</h2><p class="hint">The rules turned each event into a journal entry. Mara prepared them; Jonas, a second Fund Admin, approves. Nobody approves their own work. Click an entry to see its debit and credit lines.</p>'+
   (ctl?'':'<p class="note warn">You\'re acting as Mara, who prepared these entries, so you can\'t approve them. <button type="button" class="link" data-act="as-controller">Switch to Jonas</button></p>')+
   (flagged.length?'<h3>Needs your review ('+flagged.length+')</h3><div class="je-list">'+flagged.map(entryRow).join("")+'</div>':'')+
-  (back.length?'<h3>Sent back to ops ('+back.length+')</h3><div class="je-list">'+back.map(entryRow).join("")+'</div>':'')+
+  (back.length?'<h3>Sent back to Mara ('+back.length+')</h3><div class="je-list">'+back.map(entryRow).join("")+'</div>':'')+
   '<h3>Clean drafts ('+clean.length+')</h3>'+
   (clean.length?'<div class="row"><button type="button" class="primary" data-act="approveall"'+(ctl?'':' disabled')+'>Approve all '+clean.length+' clean drafts</button></div><div class="je-list">'+clean.map(entryRow).join("")+'</div>':'<div class="empty">No clean drafts waiting.</div>')+
   (done.length?'<h3>Approved and later ('+done.length+')</h3><div class="je-list">'+done.map(entryRow).join("")+'</div>':'')+
@@ -407,7 +407,7 @@ function entryRow(j){
 }
 function entryActions(j){
   const ctl=S.role==="controller";
-  if(j.rejected) return '<button type="button" class="small" data-act="fixed" data-id="'+j.id+'"'+(S.role!=="ops"?' disabled title="Ops fix rejected entries"':'')+'>Mark fixed</button>';
+  if(j.rejected) return '<button type="button" class="small" data-act="fixed" data-id="'+j.id+'"'+(S.role!=="ops"?' disabled title="The preparer fixes rejected entries"':'')+'>Mark fixed</button>';
   if(j.status!=="Draft"&&j.status!=="Needs review") return "";
   if(S.rejecting===j.id) return '<span class="reasons"><span class="note">Why?</span>'+REASONS.map(r=>'<button type="button" class="small" data-act="rejectwith" data-id="'+j.id+'" data-reason="'+r+'">'+r+'</button>').join("")+'<button type="button" class="link" data-act="cancelreject">Cancel</button></span>';
   const dis=ctl?"":" disabled";
@@ -563,7 +563,7 @@ document.addEventListener("click",ev=>{
   if(act==="approveall"){ const r=S.entries.filter(j=>j.status==="Draft"&&!j.rejected); r.forEach(j=>{j.status="Approved";j.approvedBy=PEOPLE.controller;}); log(PEOPLE.controller,"Batch-approved "+r.length+" clean drafts: "+r.map(j=>j.id).join(", ")+"."); }
   if(act==="reject"){ S.rejecting=id; }
   if(act==="cancelreject"){ S.rejecting=null; }
-  if(act==="rejectwith"){ const j=S.entries.find(x=>x.id===id); j.prevStatus=j.status; j.status="Draft"; j.rejected=b.dataset.reason; S.rejecting=null; log(PEOPLE.controller,"Rejected "+id+": "+j.rejected+". Sent back to ops."); }
+  if(act==="rejectwith"){ const j=S.entries.find(x=>x.id===id); j.prevStatus=j.status; j.status="Draft"; j.rejected=b.dataset.reason; S.rejecting=null; log(PEOPLE.controller,"Rejected "+id+": "+j.rejected+". Sent back to Mara."); }
   if(act==="fixed"){ const j=S.entries.find(x=>x.id===id); log(PEOPLE.ops,"Marked "+id+" as fixed after rejection ("+j.rejected+")."); j.rejected=null; if(j.prevStatus==="Needs review") j.status="Needs review"; }
   if(act==="dismiss"){ const e=S.events.find(x=>x.id===id); e.dismissed=true; log(actor(),"Confirmed "+id+" as a duplicate and dismissed it."); }
   if(act==="addsplit"){ const e=S.events.find(x=>x.id===id); e.split={A:Math.round(e.amount*LPS.A.share)}; e.split.B=e.amount-e.split.A; e.status="Processed"; e.note=""; const j=makeEntry(e); log(PEOPLE.ops,"Added LP split to "+id+" from the call notice (A "+fmt(e.split.A)+", B "+fmt(e.split.B)+"). Created "+j.id+", now waiting in Approve."); }
