@@ -44,7 +44,7 @@
             <tbody>
               <tr><th scope="row">Problem</th><td>The same capital events are re-keyed twice, by ops and by the accountant. Generate the entries once, with a full trail.</td></tr>
               <tr><th scope="row">v1 scope</th><td>One fund; capital calls, management fees and distributions. Outputs: journals, LP sub-ledger, trial balance, DATEV import file.</td></tr>
-              <tr><th scope="row">Personas</th><td>Ops (primary user), fund controller (approver), external accountant (decides whether it worked).</td></tr>
+              <tr><th scope="row">Personas</th><td>Fund admin (primary user), fund controller (approver), external accountant (decides whether it worked).</td></tr>
               <tr><th scope="row">Boundary</th><td>The platform is the sub-ledger; DATEV stays the general ledger of record. The accountant keeps the judgement: closing adjustments, statements, tax.</td></tr>
               <tr><th scope="row">Validate first</th><td>Trace 10–20 events from source to booking, sort mismatches by type, measure close days.</td></tr>
               <tr><th scope="row">Principles</th><td>Correct books first, every entry traces back, append-only, review exceptions rather than everything.</td></tr>
