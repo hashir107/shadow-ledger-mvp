@@ -223,7 +223,12 @@
         <p>Draft → Needs review (only if flagged) → Approved → Exported → Reconciled. One Fund Admin prepares entries and another approves; nobody approves their own entries. Clean entries are approved as a batch, so attention goes to the flagged ones. A rejected entry goes back to Draft with a reason, and a failed export goes back to Approved once it's fixed. Every change records who, when and why.</p>
 
         <h3>Quick wins vs foundational work</h3>
-        <p>An early DATEV import for capital calls saves visible time for Fund Admin and the accountant. It's built on the real event and rule model, just narrowly, so we never ship a throwaway script.</p>
+        <p>Both matter, so they live in two separate layers:</p>
+        <ul>
+          <li><b>Quick wins on the prototype / MVP layer.</b> Fast, cheap experiments with Fund Admin and the accountant, such as a DATEV import for capital calls only. They show value early and are easy to change or drop.</li>
+          <li><b>Foundational work on the platform.</b> The event model, the rule engine, duplicate keys and the audit trail, built properly because everything else depends on them.</li>
+          <li><b>Vetted ideas graduate.</b> Whatever proves its value in the MVP layer gets built into the platform; experimentation stays in the MVP layer.</li>
+        </ul>
 
         <h3>Milestones</h3>
         <div class="tablewrap">
